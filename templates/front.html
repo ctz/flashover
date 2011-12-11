@@ -1,0 +1,104 @@
+$def with ()
+$var title: home
+
+<div class="row">
+  <div class="alert-message span14">
+    <div class="row">
+      <div class="span4"><h1 class="pull-right">flashover</h1></div>
+      <div class="span9 muted">
+        <h3>is a tool to help convert your flash assets to other formats.</h3>
+        <h3>is by <a href="http://ifihada.com" class="btn info">ctz</a>.</h3>
+        <h3>is pretty rad.</h3>
+      </div>
+    </div>
+    <div class="row">
+      <div class="span2">
+      </div>
+      <div class="span4">
+      <a href="#upload" class="btn success expand4 pull-center">upload a file &darr;</a>
+      </div>
+      <div class="span4">
+      <a href="#inspect" class="btn success expand4 pull-center">inspect a webpage &darr;</a>
+      </div>
+      <div class="pull-right">
+      <a href="tour" class="btn primary expand1 pull-center">tour &rarr;</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row hideable" id="upload-block">
+  <div class="alert-message block-message success span14">
+    <div class="row">
+      <div class="span4"><h1 class="pull-right">upload</h1></div>
+      <div class="span10">
+        <form id="file-upload" method="POST" action="/file-upload" enctype="multipart/form-data">
+          <input type="file" name="file" /> or drag and drop
+          <input class="pull-right btn primary" type="submit" value="go &rarr;" />
+        </form>
+        choose a <code>.swf</code> file.
+        <div class="alert-message error hideable" id="upload-error">
+          <a class="close" href="#upload">×</a>
+          <tt id="upload-error-detail">That doesn't look like a flash file.</tt>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row hideable" id="inspect-block">
+  <div class="alert-message block-message success span14">
+    <div class="row">
+      <div class="span4"><h1 class="pull-right">inspect</h1></div>
+      <div class="span10">
+        <div class="span10">
+          <form method="POST" action="/fetch-url">
+            <input type="text" placeholder="http://" class="span8"/>
+            <input class="pull-right btn primary" type="submit" value="go &rarr;"  />
+          </form>
+          enter a <code>http</code> or <code>https</code> address. we'll show you where flash is being used on that page.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+<script type="text/javascript">
+updateHash = function() {
+  $$('.hideable').slideUp();
+  
+  if (window.location.hash) {
+    var sel = '#' + window.location.hash.slice(1) + '-block';
+    $$(sel).slideDown();
+    
+    if (window.location.hash == '#tour') {
+      $$('#tour-form').submit();
+    }
+  }
+}
+$$('.hideable').hide();
+$$('.close').bind('click', function() { $$(this).parent().hide(); return false; });
+updateHash();
+
+$$(window).bind('hashchange', updateHash);
+
+$$('#file-upload').fileupload({
+  url: '/file-upload',
+  paramName: 'file',
+  singleFileUploads: true,
+  fail: function(e, data) {
+    $$('#upload-error-detail').text('Server rejected upload: ' + data.errorThrown);
+    $$('#upload-error').show();
+  },
+  done: function(e, data) {
+    result = JSON.parse(data.result);
+    if (result.error)
+    {
+      $$('#upload-error-detail').text(result.error);
+      $$('#upload-error').show();
+      return;
+    }
+    document.location = '/await/' + result.job;
+  },
+});
+</script>

@@ -1,0 +1,34 @@
+$def with (job)
+$var title: awaiting results
+
+<div class="pull-center extra-high">
+<img src="/static/load.gif" alt="loading graphic" />
+</div>
+<h2 class="pull-center">we're working on that...</h2>
+<h2 class="pull-center" id="info"></h2>
+
+<script type="text/javascript">
+processSuccess = function(data, textStatus, jqxhr) {
+    if (data.status != 'awaiting')
+    {
+        document.location = '/intro/$job';
+        return;
+    } else {
+        $$('#info').text('you are ' + data.position + ' in a queue of ' + data.queue);
+    }
+    setTimeout(fetchStatus, 5000);
+};
+
+processError = function(jqxhr, textStatus, errorThrown) {
+    $$('#info').text('Error: ' + textStatus + ' (' + errorThrown + ')');
+};
+
+fetchStatus = function() {
+    jQuery.ajax('/status/$job', {
+        dataType: 'json',
+        success: processSuccess,
+        error: processError,
+    });
+};
+setTimeout(fetchStatus, 1000);
+</script>
