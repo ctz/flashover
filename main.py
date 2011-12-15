@@ -2,7 +2,7 @@ import web
 import json
 import os
 import os.path as path
-from shared import pika, config, get_backend_queue, uuid, generate_uuid, get_job_status
+from shared import pika, config, get_backend_queue, uuid, generate_uuid, get_job_status, get_meta
 
 urls = (
   '/(home)?', 'front',
@@ -50,9 +50,8 @@ class file_upload(object):
     
     jobdir = path.join(config.inputdir, '%08d--%s' % (count, job))
     os.mkdir(jobdir, 0700)
-    f = open(path.join(jobdir, config.inputfn), 'w')
-    f.write(w.file.value)
-    f.close()
+    with open(path.join(jobdir, config.inputfn), 'wb') as f:
+        f.write(w.file.value)
     
     queue_backend(chan, job)
     return json(dict(job = str(job)))
@@ -74,7 +73,7 @@ class job_intro(object):
     #web.header('Content-Type', 'text/json')
     job = uuid(job)
     status, location = get_job_status(job)
-    return json(dict(status = status, location = location))
+    return json(dict(status = status, location = location, meta = get_meta(job)))
 
 if __name__ == '__main__':
   app.run()

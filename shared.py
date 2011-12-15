@@ -1,6 +1,7 @@
 import config
 import pika
 import glob
+import json
 import os.path as path
 from uuid import uuid4 as generate_uuid
 from uuid import UUID as uuid
@@ -27,3 +28,7 @@ def get_job_status(job):
     return dict(status = 'awaiting', position = outstanding.index(item) + 1, queue = len(outstanding)), item
   else:
     return dict(status = 'unknown'), None
+
+def get_meta(job):
+  with open(path.join(config.outputdir, str(job), config.metafn), 'r') as f:
+    return json.loads(f.read())
