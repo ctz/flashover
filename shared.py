@@ -32,3 +32,6 @@ def get_job_status(job):
 def get_meta(job):
   with open(path.join(config.outputdir, str(job), config.metafn), 'r') as f:
     return json.loads(f.read())
+
+def get_file_for_job(job, fn):
+  return open(path.join(config.outputdir, str(job), str(fn)), 'rb')

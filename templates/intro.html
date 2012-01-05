@@ -1,0 +1,28 @@
+$def with (job, status, meta)
+$var title: overview
+
+<div class="row">
+  <div class="alert-message span14">
+    <div class="row">
+      <div class="span4"><h1 class="pull-right">success!</h1></div>
+      <div class="span9">
+        <p> Your file was $filesize(meta['filesize']) and was processed in $duration(meta['parse_time']). </p>
+        <p> This page will be available for 24 hours. </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="span3"><h1 class="pull-right">images</h1></div>
+  <div class="span11">
+    <ul class="media-grid">
+      $for img in meta['images']:
+        <li><a href="/image/$job/$img['id']">
+            <div class="thumbnail"><img src="/image-thumb/$job/$img['id']/90" class="thumbnail" /></div>
+            <div class="thumbnail-caption">$img['id']</div>
+            </a>
+        </li>
+    </ul>
+  </div>
+</div>

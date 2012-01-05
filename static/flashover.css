@@ -62,3 +62,15 @@ a.expand1 {
   padding-top: 60px;
   padding-bottom: 60px;
 }
+
+div.thumbnail {
+  background: url('/static/img-back.png') repeat left top;
+}
+
+img.thumbnail {
+  padding: 5px;
+}
+
+div.thumbnail-caption {
+  text-align: center;
+}
