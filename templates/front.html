@@ -1,75 +1,63 @@
 $def with ()
 $var title: home
 
-<div class="row">
-  <div class="alert-message span14">
-    <div class="row">
-      <div class="span4"><h1 class="pull-right">flashover</h1></div>
-      <div class="span9 muted">
-        <h3>is a tool to help convert your flash assets to other formats.</h3>
-        <h3>is by <a href="http://ifihada.com" class="btn info">ctz</a>.</h3>
-        <h3>is pretty rad.</h3>
-      </div>
-    </div>
-    <div class="row">
-      <div class="span2">
-      </div>
-      <div class="span4">
-      <a href="#upload" class="btn success expand4 pull-center">upload a file &darr;</a>
-      </div>
-      <div class="span4">
-      <a href="#inspect" class="btn success expand4 pull-center">inspect a webpage &darr;</a>
-      </div>
-      <div class="pull-right">
-      <a href="tour" class="btn primary expand1 pull-center">tour &rarr;</a>
-      </div>
-    </div>
+<div style="padding: 10px"></div>
+<div class="hero-unit well">
+  <h1><b class="logo">flashover</b></h1>
+  <br/>
+  <p>&rarr; helps convert your flash assets to other formats.</p>
+  <p>&rarr; is by <a href="http://ifihada.com" class="btn btn-info"><i class="icon-white icon-user"></i> ctz</a>.</p>
+  <p>&rarr; is pretty rad.</p>
+  <br/>
+  
+  <div class="span2">
+    <h2>Get started:</h2>
+  </div>
+  <div class="span6 pull-right">
+    <a href="#upload" class="btn btn-success btn-large btn-pad"><i class="icon-upload icon-white"></i> Upload</a>
+    <a href="#bookmarklet" class="btn btn-success btn-large btn-pad"><i class="icon-bookmark icon-white"></i> Bookmarklet</a>
+    <a href="tour" class="btn btn-success btn-large btn-pad"><i class="icon-road icon-white"></i> Tour</a>
   </div>
 </div>
 
 <div class="row hideable" id="upload-block">
-  <div class="alert-message block-message success span14">
-    <div class="row">
-      <div class="span4"><h1 class="pull-right">upload</h1></div>
-      <div class="span10">
-        <form id="file-upload" method="POST" action="/file-upload" enctype="multipart/form-data">
-          <input type="file" name="file" /> or drag and drop
-          <input class="pull-right btn primary" type="submit" value="go &rarr;" />
-        </form>
-        choose a <code>.swf</code> file.
-        <div class="alert-message error hideable" id="upload-error">
-          <a class="close" href="#upload">×</a>
-          <tt id="upload-error-detail">That doesn't look like a flash file.</tt>
-        </div>
-      </div>
+  <div class="well span8 pull-right">
+    <h2>Upload</h2>
+    <p>Choose a <code>.swf</code> file.</p>
+    <p>
+      <form id="file-upload" method="POST" action="/file-upload" enctype="multipart/form-data" class="form-inline">
+        <input type="file" name="file" /> (or just drag and drop)
+        <input class="pull-right btn btn-primary" type="submit" value="Go &rarr;" />
+      </form>
+    </p>
+        
+    <div class="alert-message error hideable" id="upload-error">
+      <a class="close" href="#upload">×</a>
+      <tt id="upload-error-detail">That doesn't look like a flash file.</tt>
     </div>
   </div>
 </div>
 
-<div class="row hideable" id="inspect-block">
-  <div class="alert-message block-message success span14">
-    <div class="row">
-      <div class="span4"><h1 class="pull-right">inspect</h1></div>
-      <div class="span10">
-        <div class="span10">
-          <form method="POST" action="/fetch-url">
-            <input type="text" placeholder="http://" class="span8"/>
-            <input class="pull-right btn primary" type="submit" value="go &rarr;"  />
-          </form>
-          enter a <code>http</code> or <code>https</code> address. we'll show you where flash is being used on that page.
-        </div>
-      </div>
-    </div>
+<div class="row hideable" id="bookmarklet-block">
+  <div class="well span8 pull-right">
+    <h2>Bookmarklet</h2>
+    <p class="pull-center">
+      <a class="btn btn-primary btn-large" href="javascript:void((function(){var%20e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('src','http://localhost:8080/static/bookmarket.js');document.body.appendChild(e)})())">
+        Inspect with flashover
+      </a>
+    </p>
+    <p>Drag this button to your toolbar or bookmark it.</p>
   </div>
+</div>
 </div>
     
 <script type="text/javascript">
 updateHash = function() {
-  $$('.hideable').slideUp();
+  $$('.hideable').hide();
   
   if (window.location.hash) {
     var sel = '#' + window.location.hash.slice(1) + '-block';
-    $$(sel).slideDown();
+    $$(sel).fadeIn();
     
     if (window.location.hash == '#tour') {
       $$('#tour-form').submit();

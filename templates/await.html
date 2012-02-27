@@ -11,7 +11,7 @@ $var title: awaiting results
 processSuccess = function(data, textStatus, jqxhr) {
     if (data.status != 'awaiting')
     {
-        document.location = '/intro/$job';
+        document.location = '/results/$job';
         return;
     } else {
         $$('#info').text('you are ' + data.position + ' in a queue of ' + data.queue);

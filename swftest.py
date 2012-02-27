@@ -11,9 +11,8 @@ def mustdir(d):
 if __name__ == '__main__':
     mustdir('testout')
     o = open('test.txt', 'w')
-    sys.stdout = o
+    #sys.stdout = o
     for f in glob.glob('../corpus/*.swf'):
-        if 'subscribe' not in f: continue
         print 'file', f
         out = path.join('testout', path.basename(f))
         mustdir(out)

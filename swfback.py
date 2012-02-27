@@ -21,31 +21,39 @@ def output_with_alpha(img, outf):
         alpha = Image.fromstring('L', opaque.size, img.bitmapAlphaData.read())
         opaque.putalpha(alpha)
         opaque.save(outf, 'PNG')
+        return 'Re-attached alpha channel and converted to PNG', swf.consts.BitmapType.PNG
     else:
-        Image.open(img.bitmapData).save(outf)
+        im = Image.open(img.bitmapData)
+        im.save(outf, im.format)
+        return 'Direct', img.bitmapType
 
 def output_image(img, jpeg_table, outf):
     if isinstance(img, swf.tag.TagDefineBitsJPEG2):
-        output_with_alpha(img, outf)
+        return output_with_alpha(img, outf)
     elif isinstance(img, swf.tag.TagDefineBits):
         s = StringIO()
         assert jpeg_table is not None
         if jpeg_table:
             jpeg_table.jpegTables.seek(0)
             s.write(jpeg_table.jpegTables.read())
+            action = 'Direct with re-attached JPEG tables'
+        else:
+            action = 'Direct'
         img.bitmapData.seek(0)
         s.write(img.bitmapData.read())
         s.seek(0)
-        Image.open(s).save(outf)
+        im = Image.open(s)
+        im.save(outf, im.format)
+        return action, img.bitmapType
     else:
-        output_with_alpha(img, outf)
+        return output_with_alpha(img, outf)
 
 def debug(f, timeline, indent = 0):
     for i, x in enumerate(timeline.tags):
         print >>f, '    ' * indent, i, x
         if hasattr(x, 'tags'):
             debug(f, x, indent + 1)
-        
+            
 def process_file(input, outdir):
     print 'we have candidate', input
 
@@ -67,6 +75,8 @@ def process_file(input, outdir):
             sounds.append(dict(status = 'extracted',
                                id = i,
                                kind = 'soundstream',
+                               filesize = path.getsize(path.join(outdir, filename)),
+                               mimetype = swf.consts.AudioCodec.MimeTypes[stream[0].soundFormat],
                                filename = filename))
         elif swf.sound.junk(stream):
             pass # discard junk
@@ -86,6 +96,8 @@ def process_file(input, outdir):
             sounds.append(dict(status = 'extracted',
                                id = i,
                                kind = 'sound',
+                               filesize = path.getsize(path.join(outdir, filename)),
+                               mimetype = swf.consts.AudioCodec.MimeTypes[sound.soundFormat],
                                filename = filename))
         elif swf.sound.junk(stream):
             pass # discard junk
@@ -104,11 +116,35 @@ def process_file(input, outdir):
         pass
     
     for i, image in enumerate(m.all_tags_of_type((swf.tag.TagDefineBitsLossless, swf.tag.TagDefineBits))):
-        filename = 'image-%d%s' % (i, swf.consts.BitmapType.FileExtensions[image.bitmapType])
-        with open(path.join(outdir, filename), 'wb') as sf:
-            output_image(image, jpeg_table, sf)
+        # output to temp file, because type can change during writing
+        tmp_filename = 'image-%d.tmp' % (i)
+        with open(path.join(outdir, tmp_filename), 'wb') as sf:
+            action, resulting_type = output_image(image, jpeg_table, sf)
+        
+        # now move into place
+        real_filename = 'image-%d%s' % (i, swf.consts.BitmapType.FileExtensions[resulting_type])
+        os.rename(path.join(outdir, tmp_filename), path.join(outdir, real_filename))
+        
         images.append(dict(status = 'extracted',
                            id = i,
+                           extract = action,
+                           filesize = path.getsize(path.join(outdir, real_filename)),
+                           original_type = swf.consts.BitmapType.tostring(image.bitmapType),
+                           effective_type = swf.consts.BitmapType.tostring(resulting_type),
+                           filename = real_filename))
+
+    # export shapes
+    shapes = []
+    for i, shape in enumerate(m.all_tags_of_type(swf.tag.TagDefineShape)):
+        filename = 'shape-%d.svg' % (i,)
+        with open(path.join(outdir, filename), 'wb') as sf:
+            exporter = swf.export.SingleShapeSVGExporter()
+            svg = exporter.export_single_shape(shape)
+            svg.seek(0)
+            sf.write(svg.read())
+        shapes.append(dict(status = 'converted',
+                           id = i,
+                           filesize = path.getsize(path.join(outdir, filename)),
                            filename = filename))
                  
     # export binaries
@@ -119,23 +155,28 @@ def process_file(input, outdir):
             sf.write(bin.data)
         binaries.append(dict(status = 'extracted',
                              id = i,
+                             filesize = path.getsize(path.join(outdir, filename)),
                              filename = filename))
     
     # try svg
     svg = m.export()
-    with open(path.join(outdir, 'test.svg'), 'w') as sf:
+    with open(path.join(outdir, 'svg.svg'), 'w') as sf:
         svg.seek(0)
         sf.write(svg.read())
         
-    with open(path.join(outdir, 'test.txt'), 'w') as sf:
+    with open(path.join(outdir, 'log.txt'), 'w') as sf:
         debug(sf, m)
-    
     
     print 'done'
     return dict(filesize = path.getsize(input),
                 parse_time = parse_time,
                 sounds = sounds,
                 images = images,
+                binaries = binaries,
+                shapes = shapes,
+                svg = 'svg.svg',
+                log = 'log.txt',
+                input = config.inputfn,
                 )
 
 def emit_meta(dir, obj):

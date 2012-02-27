@@ -1,28 +1,162 @@
 $def with (job, status, meta)
 $var title: overview
 
-<div class="row">
-  <div class="alert-message span14">
-    <div class="row">
-      <div class="span4"><h1 class="pull-right">success!</h1></div>
-      <div class="span9">
-        <p> Your file was $filesize(meta['filesize']) and was processed in $duration(meta['parse_time']). </p>
-        <p> This page will be available for 24 hours. </p>
+$def details_link(icon, url, name_single, name_plural, key):
+  $if len(meta[key]):
+    <li><a href="/$url/$job"><i class="icon-$icon"></i> ${len(meta[key])} ${plural(meta[key], name_single, name_plural)}</a></li>
+  $else:
+    <li><span class="disabled"><i class="icon-$icon"></i> No ${plural(0, name_single, name_plural)}</span></li>
+
+<div class="content">
+  <div class="row">
+    <div class="span2">
+      <ul class="nav nav-list">
+        <li class="active"><a href="#overview"><i class="icon-home"></i> Overview</a></li>
+        <hr/>
+        
+        <li class="nav-header">
+          Assets
+        </li>
+        $:details_link('asterisk', 'shape', 'shape', 'shapes', 'shapes')
+        $:details_link('picture', 'image', 'image', 'images', 'images')
+        $:details_link('volume-up', 'sound', 'sound', 'sounds', 'sounds')
+        $:details_link('file', 'binary', 'binary', 'binaries', 'binaries')
+        
+        <hr/>
+        <li class="nav-header">
+          Structure
+        </li>
+        <li><a href="/timeline/$job"><i class="icon-forward"></i> Timeline</a></li>
+        <li><a href="/scripts/$job"><i class="icon-list"></i> Scripts</a></li>
+        <li><a href="/metadata/$job"><i class="icon-tags"></i> Metadata</a></li>
+        
+        <hr/>
+        
+        <li><a href="/input-file/$job"><i class="icon-download-alt"></i> Download SWF</a></li>
+        <li><span class="disabled" title="input file size"><i class="icon-resize-full"></i> $filesize(meta['filesize'])</span></li>
+        <li><span class="disabled" title="processing time"><i class="icon-time"></i> $duration(meta['parse_time'])</span></li>
+        
+      </ul>
+    </div>
+    <div class="span7 alert alert-error">
+      <i class="icon-trash"></i></span>
+       These results will be available for <b>24 hours</b>. 
+    </div>
+  </div>
+  
+  <hr/>
+
+  <div class="row">
+    <div class="span12 btn-toolbar">
+      <div class="btn-group">
+      </div>
+      <div class="btn-group">
+      </div>
+      <div class="btn-group">
       </div>
     </div>
   </div>
-</div>
+  <hr/>
 
-<div class="row">
-  <div class="span3"><h1 class="pull-right">images</h1></div>
-  <div class="span11">
-    <ul class="media-grid">
-      $for img in meta['images']:
-        <li><a href="/image/$job/$img['id']">
-            <div class="thumbnail"><img src="/image-thumb/$job/$img['id']/90" class="thumbnail" /></div>
-            <div class="thumbnail-caption">$img['id']</div>
+  <div class="row hide">
+    <div class="span2">
+      <h1>debug</h1>
+    </div>
+    <div class="span8">
+    <a href="/log/$job">log</a>
+    <img src="/svg/$job" />
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="span2">
+      <h1>images<br/><small>${overview(meta['images'])}</small></h1>
+    </div>
+    <div class="span8">
+      $if not meta['images']:
+        <span class="label label-warning">No images found</span>
+      <ul class="thumbnails">
+        $for img in meta['images']:
+          <li><a href="/image/$job/$img['id']">
+              <div class="thumbnail"><img src="/image-thumb/$job/$img['id']/90" class="thumbnail" /></div>
+              <div class="thumbnail-caption">Image $(img['id'] + 1)</div>
+              </a>
+          </li>
+      </ul>
+    </div>
+  </div>
+  
+  <hr/>
+
+  <div class="row">
+    <div class="span2">
+      <h1>shapes<br/><small>${overview(meta['shapes'])}</small></h1>
+    </div>
+    <div class="span8">
+      $if not meta['shapes']:
+        <span class="label label-warning">No shapes found</span>
+      <ul class="thumbnails">
+      $for shp in meta['shapes']:
+        <li><a href="/shape/$job/$shp['id']">
+            <div class="thumbnail"><img src="/image-thumb-svg/$job/$shp['id']/90" class="thumbnail" /></div>
+            <div class="thumbnail-caption">Shape $(shp['id'] + 1)</div>
             </a>
         </li>
-    </ul>
+      </ul>
+    </div>
+  </div>
+  
+  <hr/>
+
+  <div class="row">
+    <div class="span2">
+      <h1>audio<br/><small>${overview(meta['sounds'])}</small></h1>
+    </div>
+    <div class="span8">
+      $if not meta['sounds']:
+        <span class="label label-warning">No audio found</span>
+      <ul class="thumbnails">
+      $for snd in meta['sounds']:
+        <li>
+          <a href="/audio/$job/$snd['id']">
+            <audio controls="controls">
+              <source src="/sound-raw/$job/$snd['id']" type="$snd['mimetype']" />
+              <a href="/sound-raw/$job/$snd['id']">Download</a>
+            </audio>
+            <div class="thumbnail-caption">Sound $(snd['id'] + 1)</div>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  
+  <hr/>
+
+  <div class="row">
+    <div class="span2"><h1>binaries<br/><small>${overview(meta['binaries'])}</small></h1></div>
+    <div class="span8">
+    $if not meta['binaries']:
+      <span class="label label-warning">No binaries found</span>
+    $else:
+      <table class="bordered-table">
+        <thead>
+          <tr>
+            <th>Index</th>
+            <th>Size</th>
+            <th/>
+          </tr>
+        </thead>
+        <tbody>
+        $for bin in meta['binaries'][:5]:
+          <tr>
+            <th>${bin['id'] + 1}</th>
+            <td>$filesize(bin['filesize'])</td>
+            <td><a href="/bin-raw/$job/$bin['id']">Download</a></td>
+          </tr>
+        </tbody>
+      </table>
+      $if len(meta['binaries']) > 5 or 1:
+        <div class="pull-right">
+    </div>
   </div>
 </div>

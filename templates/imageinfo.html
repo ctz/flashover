@@ -1,0 +1,31 @@
+$def with (job, meta, img)
+$var title: Image $(meta['id'] + 1)
+
+<div class="content">
+  <div class="row">
+    <div class="span2">
+      <h1>Image $(meta['id'] + 1)</h1>
+      <dl>
+        <dt>Original file type:</dt>
+          <dd>$meta['original_type']</dd>
+        $if meta['original_type'] != meta['effective_type']:
+          <dt>Extracted file type:</dt>
+            <dd>$meta['effective_type']</dd>
+        <dt>Pixel format:</dt>
+          <dd>$img['mode']</dd>
+        <dt>Extraction method:</dt>
+          <dd>$meta['extract']</dd>
+        <dt>Dimensions:</dt>
+          <dd>${img['dims'][0]} x ${img['dims'][1]}px</dd>
+        <dt>File size:</dt>
+          <dd>$filesize(meta['filesize'])</dd>
+      </dl>
+    </div>
+    <div class="span8">
+      <a href="/image-raw/$job/$meta['id']">
+        <div class="thumbnail"><img src="/image-raw/$job/$meta['id']" class="thumbnail" /></div>
+        <div class="thumbnail-caption">Click to download</div>
+      </a>
+    </div>
+  </div>
+</div>
