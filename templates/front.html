@@ -1,5 +1,5 @@
 $def with ()
-$var title: home
+$var title: online flash decompiler
 
 <div style="padding: 10px"></div>
 <div class="hero-unit well">
@@ -31,10 +31,14 @@ $var title: home
       </form>
     </p>
         
-    <div class="alert-message error hideable" id="upload-error">
-      <a class="close" href="#upload">×</a>
-      <tt id="upload-error-detail">That doesn't look like a flash file.</tt>
-    </div>
+  </div>
+</div>
+
+<div class="row hideable" id="upload-error">
+  <div class="span9 alert alert-error">
+    <h4 class="alert-heading">Upload failed!</h4>
+    <strong>Sorry</strong>, this is unexpectedly broken.  The error was:
+    <tt id="upload-error-detail">That doesn't look like a flash file.</tt>
   </div>
 </div>
 
@@ -79,13 +83,13 @@ $$('#file-upload').fileupload({
     $$('#upload-error').show();
   },
   done: function(e, data) {
-    result = JSON.parse(data.result);
-    if (result.error)
+    if (data.result.error)
     {
-      $$('#upload-error-detail').text(result.error);
+      $$('#upload-error-detail').text(data.result.error);
       $$('#upload-error').show();
       return;
     }
+    result = JSON.parse(data.result);
     document.location = '/await/' + result.job;
   },
 });

@@ -1,17 +1,32 @@
 import web
+import time
 
-def base_reduce(value, base, suffixes):
+duration_units = (
+  'ns',
+  'us',
+  'ms',
+  's',
+  ' mins',
+  ' hrs',
+  ' days'
+)
+
+def base_reduce(value, bases, suffixes):
+    if not isinstance(bases, list):
+        bases = [bases] * len(suffixes)
     i = 0
-    while value > base and i < len(suffixes):
+    while i < len(suffixes) and i < len(bases) and value > bases[i]:
+        value /= bases[i]
         i += 1
-        value /= base
     return '%2.f%s' % (value, suffixes[i])
 
 def filesize(fs):
-    return base_reduce(fs, 1024.0, [' bytes'] + 'KB MB GB TB'.split())
+    return base_reduce(float(fs), 1024.0, [' bytes'] + 'KB MB GB TB'.split())
 
 def duration(secs):
-    return base_reduce(secs * 1e9, 1000, 'ns us ms s'.split())
+    if secs < 0:
+        return duration(-secs) + ' ago'
+    return base_reduce(float(secs) * 1e9, [1000, 1000, 1000, 60, 60, 24], duration_units)
 
 def overview(items):
     count = len(items)
@@ -31,5 +46,6 @@ exports = dict(
     duration = duration,
     overview = overview,
     urlquote = web.urlquote,
-    plural = plural
+    plural = plural,
+    time_now = time.time()
 )

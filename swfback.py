@@ -1,11 +1,9 @@
 
 # glue
-from shared import pika, config, get_backend_queue, get_job_status, uuid
+from shared import config
 import json
-import traceback
 import os.path as path
 import os
-import sys
 from cStringIO import StringIO
 from time import time
 
@@ -51,8 +49,18 @@ def output_image(img, jpeg_table, outf):
 def debug(f, timeline, indent = 0):
     for i, x in enumerate(timeline.tags):
         print >>f, '    ' * indent, i, x
+        print >>f, '    ' * indent, '  ', vars(x)
         if hasattr(x, 'tags'):
             debug(f, x, indent + 1)
+            
+def produce_stats(meta):
+    r = dict()
+    for kind in 'images binaries sounds shapes'.split():
+        r['c_' + kind] = len(meta.get(kind, []))
+        r['sz_' + kind] = sum(x['filesize'] for x in meta.get(kind, []))
+    r['sz_input'] = meta.get('filesize', 0)
+    r['cputime'] = meta.get('parse_time', 0.0)
+    return r
             
 def process_file(input, outdir):
     print 'we have candidate', input
@@ -139,7 +147,7 @@ def process_file(input, outdir):
         filename = 'shape-%d.svg' % (i,)
         with open(path.join(outdir, filename), 'wb') as sf:
             exporter = swf.export.SingleShapeSVGExporter()
-            svg = exporter.export_single_shape(shape)
+            svg = exporter.export_single_shape(shape, m)
             svg.seek(0)
             sf.write(svg.read())
         shapes.append(dict(status = 'converted',
@@ -157,12 +165,6 @@ def process_file(input, outdir):
                              id = i,
                              filesize = path.getsize(path.join(outdir, filename)),
                              filename = filename))
-    
-    # try svg
-    svg = m.export()
-    with open(path.join(outdir, 'svg.svg'), 'w') as sf:
-        svg.seek(0)
-        sf.write(svg.read())
         
     with open(path.join(outdir, 'log.txt'), 'w') as sf:
         debug(sf, m)
@@ -174,43 +176,6 @@ def process_file(input, outdir):
                 images = images,
                 binaries = binaries,
                 shapes = shapes,
-                svg = 'svg.svg',
                 log = 'log.txt',
                 input = config.inputfn,
                 )
-
-def emit_meta(dir, obj):
-    with open(path.join(dir, config.metafn), 'w') as f:
-        print >>f, json.dumps(obj)
-
-def emit_exception(dir):
-    with open(path.join(dir, config.errorfn), 'w') as f:
-        traceback.print_exc(file = f)
-        traceback.print_exc(file = sys.stderr)
-
-def process_one(chan, method, properties, body):
-    job = uuid(body)
-    print 'We have job', job
-    status, location = get_job_status(job)
-
-    if status['status'] != 'awaiting':
-        print 'rejected: already processed'
-        return
-
-    outdir = path.join(config.outputdir, str(job))
-    try:
-        meta = process_file(path.join(location, config.inputfn), location)
-    except Exception, e:
-        emit_meta(location, dict(error = 'failed to process swf. error logged.'))
-        emit_exception(location)
-    else:
-        emit_meta(location, dict(status = 'success', meta = meta))
-    os.rename(location, outdir)
-
-if __name__ == '__main__':
-    chan, _, _ = get_backend_queue()
-    chan.basic_consume(process_one,
-                       queue = config.backend_queue,
-                       no_ack = True)
-    print 'Now running...'
-    chan.start_consuming()

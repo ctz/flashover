@@ -3,7 +3,8 @@ import json
 import os
 import os.path as path
 from traceback import format_exc
-from shared import config, get_backend_queue, uuid, generate_uuid, get_job_status, get_meta, get_file_for_job, is_flash_file, queue_backend
+from shared import config, uuid, generate_uuid, get_job_status, get_meta, get_file_for_job, is_flash_file
+from db import db
 import formatting
 import svgthumb
 import Image
@@ -12,6 +13,7 @@ from StringIO import StringIO
 urls = (
     '/(home)?', 'front',
     '/about', 'about',
+    '/stats', 'stats',
     '/await/([0-9a-f-]+)', 'await',
     '/status/([0-9a-f-]+)', 'job_status',
     '/results/([0-9a-f-]+)', 'job_intro',
@@ -31,7 +33,7 @@ app = web.application(urls, globals())
 
 render = web.template.render(config.templates, base = 'base', globals = formatting.exports)
 json = json.dumps
-debug = True
+web.config.debug = True
 
 class base_page(object):
     """
@@ -45,8 +47,8 @@ class base_page(object):
         try:
             return self.process(*args, **kwargs)
         except Exception, e:
-            if debug:
-                raise e
+            if web.config.debug:
+                raise
             else:
                 return self.error(e)
 
@@ -97,6 +99,12 @@ class about(base_html):
     def process(self):
         return render.about()
 
+class stats(base_html):
+    def process(self):
+        return render.stats(stats24hr = db.get_stats_24hr(),
+                            stats2hr = db.get_stats_2hr(),
+                            statsall = db.get_stats())
+
 class file_upload(base_json):
     methods = set(['POST'])
     
@@ -107,15 +115,13 @@ class file_upload(base_json):
             return json(dict(error = "Not a flash file.  Flash files must start with FWS or CWS.",
                              size = len(w.file.value)))
         
-        job = generate_uuid()
-        chan, count, _ = get_backend_queue()
-        
-        jobdir = path.join(config.inputdir, '%08d--%s' % (count, job))
+        job = generate_uuid()        
+        jobdir = path.join(config.inputdir, str(job))
         os.mkdir(jobdir, 0700)
         with open(path.join(jobdir, config.inputfn), 'wb') as f:
             f.write(w.file.value)
         
-        queue_backend(chan, job)
+        db.queue_job(job)
         return json(dict(job = str(job)))
 
 class await(base_html):
@@ -128,17 +134,22 @@ class job_status(base_json):
         web.header('Content-Type', 'text/json')
         job = str(uuid(job))
         status, _ = get_job_status(job)
-        return json(status)
+        
+        if status == 'awaiting':
+            return json(dict(status = status, **db.queue_position(job)))
+        else:
+            return json(dict(status = status))
 
 class job_intro(base_html):
     def process(self, job):
         job = uuid(job)
         status, location = get_job_status(job)
         meta = get_meta(job)
+        stats = db.get_completed(job)
         if 'error' in meta:
-            return render.failed(meta['error'])
+            return render.failed(meta['error'], str(job))
         else:
-            return render.intro(job = job, status = status, meta = meta['meta'])
+            return render.intro(job = job, status = status, meta = meta['meta'], stats = stats)
 
 class image_thumb(base_image):
     def process(self, job, id, px):

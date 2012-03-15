@@ -1,0 +1,56 @@
+$def with (stats24hr, stats2hr, statsall)
+$var title: stats
+
+<div class="content">
+$for text, stats in [('in the past 2 hours', stats2hr), ('in the past 24 hours', stats24hr), ('for all time', statsall)]:
+  <h2>${text}:</h2>
+  <div class="row">
+    <div class="span2 well pull-center">
+      <h3>${stats['count']}</h3>
+      <h5 class="muted">SWFs processed</h5>
+    </div>
+    <div class="span2 well pull-center">
+      <h3>${filesize(stats['sz_input'])}</h3>
+      <h5 class="muted">SWF size processed</h5>
+    </div>
+    <div class="span2 well pull-center">
+      <h3>${duration(stats['cputime'])}</h3>
+      <h5 class="muted">CPU time</h5>
+    </div>
+    <div class="span2 well pull-center">
+      <h3>${duration(stats['waittime'])}</h3>
+      <h5 class="muted">Waiting time</h5>
+    </div>
+  </div>
+  <div class="row">
+    <div class="span10">
+      <table class="table table-bordered ">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="pull-center"><i class="icon-asterisk"></i> Shapes</th>
+            <th><i class="icon-picture"></i> Images</th>
+            <th><i class="icon-volume-up"></i> Sounds</th>
+            <th><i class="icon-file"></i> Binaries</th>
+          </tr>
+        </thead>
+        <tbody class="pull-center">
+          <tr>
+            <th>Assets:</th>
+            <td> ${stats['c_shapes']} </td>
+            <td> ${stats['c_images']} </td>
+            <td> ${stats['c_sounds']} </td>
+            <td> ${stats['c_binaries']} </td>
+          </tr>
+          <tr>
+            <th>Sizes:</th>
+            <td> ${filesize(stats['sz_shapes'])} </td>
+            <td> ${filesize(stats['sz_images'])} </td>
+            <td> ${filesize(stats['sz_sounds'])} </td>
+            <td> ${filesize(stats['sz_binaries'])} </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

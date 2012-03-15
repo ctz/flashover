@@ -7,7 +7,7 @@ $def with (content)
     $if content.title:
         : ${content.title}
     </title>
-    <meta name="description" content="flashover is a web-based flash movie analysis tool">
+    <meta name="description" content="flashover is a web-based flash movie decompiler tool">
     <meta name="author" content="ctz">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -41,7 +41,7 @@ $def with (content)
     <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
-          <a class="brand" href="/home">flashover</a>
+          <a title="flashover : online flash decompiler" class="brand" href="/home">flashover</a>
           <ul class="nav">
             <li
             $if content.title == 'home':
