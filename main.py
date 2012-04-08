@@ -10,28 +10,39 @@ import svgthumb
 import Image
 from StringIO import StringIO
 
+job = '([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})'
+id = '(\d+)'
+sz = '(\d+)'
+
 urls = (
     '/(home)?', 'front',
     '/about', 'about',
+    '/api', 'api',
     '/stats', 'stats',
-    '/await/([0-9a-f-]+)', 'await',
-    '/status/([0-9a-f-]+)', 'job_status',
-    '/results/([0-9a-f-]+)', 'job_intro',
+    '/await/' + job, 'await',
+    '/status/' + job, 'job_status',
+    '/results/' + job, 'job_intro',
     '/file-upload', 'file_upload',
-    '/image/([0-9a-f-]+)/(\d+)', 'image_details',
-    '/image-thumb/([0-9a-f-]+)/(\d+)/(\d+)', 'image_thumb',
-    '/image-thumb-svg/([0-9a-f-]+)/(\d+)/(\d+)', 'svg_thumb',
-    '/image-svg/([0-9a-f-]+)/(\d+)/(\d+)', 'svg_raw',
-    '/image-raw/([0-9a-f-]+)/(\d+)', 'image_raw',
-    '/bin-raw/([0-9a-f-]+)/(\d+)', 'bin_raw',
-    '/sound-raw/([0-9a-f-]+)/(\d+)', 'sound_raw',
-    '/input-file/([0-9a-f-]+)', 'input_file_raw',
-    '/log/([0-9a-f-]+)', 'log_raw',
-    '/svg/([0-9a-f-]+)', 'svg_full_raw',
+    '/image/' + job + '/' + id, 'image_details',
+    '/shape/' + job + '/' + id, 'shape_details',
+    '/image-thumb/' + job + '/' + id + '/' + sz, 'image_thumb',
+    '/image-thumb-svg/' + job + '/' + id + '/' + sz, 'svg_thumb',
+    '/image-svg/' + job + '/' + id, 'svg_raw',
+    '/image-raw/' + job + '/' + id, 'image_raw',
+    '/bin-raw/' + job + '/' + id, 'bin_raw',
+    '/sound-raw/' + job + '/' + id, 'sound_raw',
+    '/input-file/' + job, 'input_file_raw',
+    '/shapes/' + job, 'job_shapes',
+    '/images/' + job, 'job_images',
+    '/sounds/' + job, 'job_sounds',
+    '/binaries/' + job, 'job_binaries',
+    '/log/' + job, 'log_raw',
+    '/svg/' + job, 'svg_full_raw',
 )
 app = web.application(urls, globals())
 
 render = web.template.render(config.templates, base = 'base', globals = formatting.exports)
+part_render = web.template.render(config.templates, globals = formatting.exports)
 json = json.dumps
 web.config.debug = True
 
@@ -99,6 +110,10 @@ class about(base_html):
     def process(self):
         return render.about()
 
+class api(base_html):
+    def process(self):
+        return render.api()
+
 class stats(base_html):
     def process(self):
         return render.stats(stats24hr = db.get_stats_24hr(),
@@ -140,7 +155,7 @@ class job_status(base_json):
         else:
             return json(dict(status = status))
 
-class job_intro(base_html):
+class job_base(base_html):
     def process(self, job):
         job = uuid(job)
         status, location = get_job_status(job)
@@ -149,7 +164,42 @@ class job_intro(base_html):
         if 'error' in meta:
             return render.failed(meta['error'], str(job))
         else:
-            return render.intro(job = job, status = status, meta = meta['meta'], stats = stats)
+            sidebar = part_render.part_sidebar(current = self.WHERE, job = job, status = status, meta = meta['meta'], stats = stats)
+            return getattr(render, self.WHERE)(sidebar = sidebar, job = job, status = status, meta = meta['meta'], stats = stats)
+
+class job_item_base(base_html):
+    def process(self, job, id):
+        job = uuid(job)
+        id = int(id)
+        status, location = get_job_status(job)
+        meta = get_meta(job)
+        stats = db.get_completed(job)
+        if 'error' in meta:
+            return render.failed(meta['error'], str(job))
+        itemmeta = meta['meta'][self.WHERE][id]
+        sidebar = part_render.part_sidebar(current = self.WHERE, job = job, status = status, meta = meta['meta'], stats = stats)
+        return getattr(render, self.WHERE + '_details')(sidebar = sidebar, job = job, meta = itemmeta)
+            
+class job_intro(job_base):
+    WHERE = 'intro'
+    
+class job_shapes(job_base):
+    WHERE = 'shapes'
+    
+class job_images(job_base):
+    WHERE = 'images'
+    
+class job_sounds(job_base):
+    WHERE = 'sounds'
+    
+class job_binaries(job_base):
+    WHERE = 'binaries'
+
+class image_details(job_item_base):
+    WHERE = 'images'
+
+class shape_details(job_item_base):
+    WHERE = 'shapes'
 
 class image_thumb(base_image):
     def process(self, job, id, px):
@@ -165,8 +215,8 @@ class image_thumb(base_image):
         im.save(s, 'PNG')
         return s.getvalue()
     
-class svg_thumb(object):
-  def GET(self, job, id, px):
+class svg_thumb(base_image):
+  def process(self, job, id, px):
     job = uuid(job)
     meta = get_meta(job)['meta']
     shp = meta['shapes'][int(id)]
@@ -185,47 +235,40 @@ def serve_binary(job, chooser, mimetype = 'application/octet-stream'):
         web.header('Content-Type', mimetype)
     web.header('Content-Disposition', 'inline; filename=' + name)
     with get_file_for_job(job, name) as f:
+        f.seek(0, os.SEEK_END)
+        web.header('Content-Length', str(f.tell()))
+        f.seek(0)
         return f.read()
 
-class image_raw(object):
-    def GET(self, job, id):
+class image_raw(base_image):
+    def process(self, job, id):
         return serve_binary(job, lambda meta: meta['images'][int(id)]['filename'])
 
-class bin_raw(object):
-    def GET(self, job, id):
+class bin_raw(base_image):
+    def process(self, job, id):
         return serve_binary(job, lambda meta: meta['binaries'][int(id)]['filename'])
         
-class sound_raw(object):
-    def GET(self, job, id):
+class sound_raw(base_image):
+    def process(self, job, id):
         return serve_binary(job, lambda meta: meta['sounds'][int(id)]['filename'],
                             mimetype = lambda meta: meta['sounds'][int(id)]['mimetype'])
 
-class svg_full_raw(object):
-    def GET(self, job):
+class svg_full_raw(base_image):
+    def process(self, job):
         return serve_binary(job, lambda meta: meta['svg'], mimetype = 'image/svg+xml')
 
-class svg_raw(object):
-    def GET(self, job, id):
+class svg_raw(base_image):
+    def process(self, job, id):
         return serve_binary(job, lambda meta: meta['shapes'][int(id)]['filename'], mimetype = 'image/svg+xml')
 
-class log_raw(object):
-    def GET(self, job):
+class log_raw(base_image):
+    def process(self, job):
         return serve_binary(job, lambda meta: meta['log'], mimetype = 'text/plain')
 
-class input_file_raw(object):
-    def GET(self, job):
+class input_file_raw(base_image):
+    def process(self, job):
         return serve_binary(job, lambda meta: meta['input'], mimetype = 'application/x-shockwave-flash')
-        
-class image_details(object):
-    def GET(self, job, id):
-        job = uuid(job)
-        id = int(id)
-        meta = get_meta(job)['meta']
-        imgmeta = meta['images'][id]
-        with get_file_for_job(job, imgmeta['filename']) as f:
-            im = Image.open(f)
-            imgdata = dict(dims = im.size, mode = im.mode, format = im.format)
-        return render.imageinfo(job = job, meta = imgmeta, img = imgdata)
+
     
 if __name__ == '__main__':
   app.run()

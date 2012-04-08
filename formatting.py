@@ -1,5 +1,6 @@
 import web
 import time
+import json
 
 duration_units = (
   'ns',
@@ -41,11 +42,24 @@ def plural(n, single, plural):
         n = len(n)
     return [plural, single][n == 1]
 
+def audio_desc(meta):
+    if meta['type'] == 'MP3':
+        inp = dict(meta)
+        inp['stereo'] = ['mono', 'stereo'][meta['channels'] != 1]
+        inp['bitrate'] = str(int(meta['bitrate'])) + 'kbps'
+        if meta['vbr']:
+            inp['bitrate'] += ' (VBR)'
+        return "%(version)s %(layer)s %(samplerate)sKHz %(bitrate)s %(stereo)s" % inp
+    else:
+        return 'unknown'
+    
 exports = dict(
     filesize = filesize,
     duration = duration,
     overview = overview,
     urlquote = web.urlquote,
     plural = plural,
-    time_now = time.time()
+    time_now = time.time(),
+    json = json.dumps,
+    audio_desc = audio_desc,
 )

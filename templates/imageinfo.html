@@ -1,8 +1,10 @@
-$def with (job, meta, img)
+$def with (sidebar, job, meta, img)
 $var title: Image $(meta['id'] + 1)
 
 <div class="content">
   <div class="row">
+    $:sidebar
+    
     <div class="span2">
       <h1>Image $(meta['id'] + 1)</h1>
       <dl>

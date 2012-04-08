@@ -10,6 +10,8 @@ from time import time
 # the interesting bits
 import swf.movie, swf.consts, swf.tag, swf.sound
 import Image
+import sndhdr
+import mp3hdr
 
 def output_with_alpha(img, outf):
     if hasattr(img, 'bitmapAlphaData'):
@@ -61,7 +63,23 @@ def produce_stats(meta):
     r['sz_input'] = meta.get('filesize', 0)
     r['cputime'] = meta.get('parse_time', 0.0)
     return r
-            
+
+def get_image_meta(imf):
+    im = Image.open(imf)
+    return dict(img_mode = im.mode, img_dims = im.size, img_info = im.info, img_format = im.format)
+
+def get_sound_meta(snf):
+    hdr = sndhdr.what(snf)
+    if hdr:
+        type, rate, chans, frames, bits_per_samp = hdr
+        return dict(snd_type = type, snd_rate = rate, snd_chans = chans, snd_frames = frames, snd_bits = bits_per_samp)
+    
+    hdr = mp3hdr.what(snf)
+    if hdr:
+        return hdr
+    
+    return dict()
+    
 def process_file(input, outdir):
     print 'we have candidate', input
 
@@ -75,7 +93,8 @@ def process_file(input, outdir):
     sounds = []
     
     # streams
-    for i, stream in enumerate(m.collect_sound_streams()):
+    for stream in m.collect_sound_streams():
+        i = len(sounds)
         if swf.sound.supported(stream):
             filename = 'soundstream-%d%s' % (i, swf.consts.AudioCodec.FileExtensions[stream[0].soundFormat])
             with open(path.join(outdir, filename), 'wb') as sf:
@@ -85,7 +104,9 @@ def process_file(input, outdir):
                                kind = 'soundstream',
                                filesize = path.getsize(path.join(outdir, filename)),
                                mimetype = swf.consts.AudioCodec.MimeTypes[stream[0].soundFormat],
-                               filename = filename))
+                               type = swf.consts.AudioCodec.tostring(stream[0].soundFormat),
+                               filename = filename,
+                               **get_sound_meta(path.join(outdir, filename))))
         elif swf.sound.junk(stream):
             pass # discard junk
         else:
@@ -96,7 +117,8 @@ def process_file(input, outdir):
                                codec = swf.consts.AudioCodec.tostring(stream[0].soundFormat)))
     
     # sounds
-    for i, sound in enumerate(m.all_tags_of_type(swf.tag.TagDefineSound)):
+    for sound in m.all_tags_of_type(swf.tag.TagDefineSound):
+        i = len(sounds)
         if swf.sound.supported(sound):
             filename = 'sound-%d%s' % (i, swf.consts.AudioCodec.FileExtensions[sound.soundFormat])
             with open(path.join(outdir, filename), 'wb') as sf:
@@ -106,7 +128,9 @@ def process_file(input, outdir):
                                kind = 'sound',
                                filesize = path.getsize(path.join(outdir, filename)),
                                mimetype = swf.consts.AudioCodec.MimeTypes[sound.soundFormat],
-                               filename = filename))
+                               type = swf.consts.AudioCodec.tostring(sound.soundFormat),
+                               filename = filename,
+                               **get_sound_meta(path.join(outdir, filename))))
         elif swf.sound.junk(stream):
             pass # discard junk
         else:
@@ -123,7 +147,9 @@ def process_file(input, outdir):
     for jpeg_table in m.all_tags_of_type(swf.tag.TagJPEGTables):
         pass
     
-    for i, image in enumerate(m.all_tags_of_type((swf.tag.TagDefineBitsLossless, swf.tag.TagDefineBits))):
+    for image in m.all_tags_of_type((swf.tag.TagDefineBitsLossless, swf.tag.TagDefineBits)):
+        i = len(images)
+        
         # output to temp file, because type can change during writing
         tmp_filename = 'image-%d.tmp' % (i)
         with open(path.join(outdir, tmp_filename), 'wb') as sf:
@@ -139,11 +165,14 @@ def process_file(input, outdir):
                            filesize = path.getsize(path.join(outdir, real_filename)),
                            original_type = swf.consts.BitmapType.tostring(image.bitmapType),
                            effective_type = swf.consts.BitmapType.tostring(resulting_type),
-                           filename = real_filename))
+                           filename = real_filename,
+                           **get_image_meta(path.join(outdir, real_filename))))
 
     # export shapes
     shapes = []
-    for i, shape in enumerate(m.all_tags_of_type(swf.tag.TagDefineShape)):
+    for shape in m.all_tags_of_type(swf.tag.TagDefineShape):
+        i = len(shapes)
+        
         filename = 'shape-%d.svg' % (i,)
         with open(path.join(outdir, filename), 'wb') as sf:
             exporter = swf.export.SingleShapeSVGExporter()
@@ -157,7 +186,8 @@ def process_file(input, outdir):
                  
     # export binaries
     binaries = []
-    for i, bin in enumerate(m.all_tags_of_type(swf.tag.TagDefineBinaryData)):
+    for bin in m.all_tags_of_type(swf.tag.TagDefineBinaryData):
+        i = len(binaries)
         filename = 'binary-%d.dat' % (i, )
         with open(path.join(outdir, filename), 'wb') as sf:
             sf.write(bin.data)

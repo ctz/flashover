@@ -1,0 +1,32 @@
+$def with (sidebar, job, meta)
+$var title: shape $(meta['id'] + 1)
+
+<div class="content">
+  <div class="row">
+    $:sidebar
+    
+    <div class="span8">
+      <a href="/image-svg/$job/$meta['id']">
+        <div class="thumbnail"><img src="/image-svg/$job/$meta['id']" /></div>
+      </a>
+      
+      <div class="row">
+        <div class="span4">
+          <dl>
+            <dt>Extraction method:</dt>
+              <dd>Converted from flash shape to SVG (nb. conversion may be lossy)</dd>
+          </dl>
+        </div>
+        <div class="span4">
+          <dl>
+            <dt>File size:</dt>
+              <dd>$filesize(meta['filesize'])</dd>
+          </dl>
+        </div>
+        <div class="span8 pull-center">
+          <a class="btn btn-flashover" href="/image-svg/$job/$meta['id']"><i class="icon-download"></i> Download</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

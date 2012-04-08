@@ -36,6 +36,19 @@ body {
   border: 0;
 }
 
+div.well {
+  border: white solid 1px;
+  -webkit-box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.5), inset 0 2px 65px rgba(241, 100, 41, 0.2);
+  -moz-box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.5), inset 0 2px 65px rgba(241, 100, 41, 0.2);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.5), inset 0 2px 65px rgba(241, 100, 41, 0.2);
+}
+
+div.well * a.btn {
+  -webkit-box-shadow: 0px 5px 10px rgba(0,0,0,0.25), 0px 1px 1px rgba(0,0,0,0.75);
+     -moz-box-shadow: 0px 5px 10px rgba(0,0,0,0.25), 0px 1px 1px rgba(0,0,0,0.75);
+          box-shadow: 0px 5px 10px rgba(0,0,0,0.25), 0px 1px 1px rgba(0,0,0,0.75);
+}
+
 input[type=file] {
   background-color: transparent !important;
 }
@@ -82,6 +95,13 @@ div.th54 {
   padding: 0px;
 }
 
+div.th138 {
+  width: 138px;
+  height: 138px;
+  margin: 0px;
+  padding: 0px;
+}
+
 ul.thumbnails-compact li {
   margin-top: 9px;
   margin-bottom: 9px;
@@ -93,6 +113,10 @@ div.delimited {
 
 div.thumbnail img {
   padding: 5px;
+}
+
+a:hover div.thumbnail {
+  border: 1px solid #aaa;
 }
 
 div.thumbnail-caption {
@@ -129,10 +153,10 @@ b.logo {
   padding-right: 20px;
 }
 
-div.well h3 {
-  text-shadow: 0px 1px 1px #fff;
-}
-
-div.well h4 {
+div.well > h2,
+div.well * h2,
+div.well > h3,
+div.well > h4,
+div.well > p {
   text-shadow: 0px 1px 1px #fff;
 }

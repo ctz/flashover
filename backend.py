@@ -6,7 +6,9 @@ import json
 import traceback
 import os.path as path
 import os
+import shutil
 import sys
+import time
 
 import swfback
 
@@ -40,15 +42,36 @@ def process_one(job):
     os.rename(location, outdir)
     return meta
 
+def handle_queue_head(txn, job):
+    if txn is None:
+        return
+    meta = process_one(job)
+    db.finish_job(job, meta, swfback.produce_stats(meta))
+
+def check_queue():
+    try:
+        txn, job = db.get_queue_head()
+        handle_queue_head(txn, job)
+    except:
+        txn.rollback()
+        raise
+    else:
+        if txn:
+            txn.commit()
+
+def clean(job):
+    outdir = path.join(config.outputdir, str(job))
+    if path.isdir(outdir):
+        open(path.join(outdir, '.clean'), 'w').close()  # leave a marker in case it fails right now
+        shutil.rmtree(outdir, ignore_errors = 1)
+
+def check_clean():
+    for job in db.get_cleanable():
+        clean(job)
+        db.set_cleaned(job)
+
 if __name__ == '__main__':
     while True:
-        try:
-            txn, job = db.get_queue_head()
-            meta = process_one(job)
-            db.finish_job(job, meta, swfback.produce_stats(meta))
-        except:
-            txn.rollback()
-            raise
-        else:
-            txn.commit()
-        
+        check_queue()
+        check_clean()
+        time.sleep(2)

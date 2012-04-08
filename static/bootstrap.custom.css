@@ -73,10 +73,15 @@ select,
 }
 
 .alert, .alert-heading {
-  color: #f16529;
+  /* color: #f16529; */
 }
 
-.navbar-inner {
+li.active a i[class*='icon-'],
+.btn-flashover i[class*='icon-'] {
+  background-image: url("/static/glyphicons-halflings-white.png");
+}
+
+.navbar-inner  {
   padding-left: 20px;
   padding-right: 20px;
   background-color: #2c2c2c;
@@ -88,6 +93,35 @@ select,
   background-image: linear-gradient(top, #e44d26, #f16529);
   background-repeat: repeat-x;
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#e44d26', endColorstr='#f16529', GradientType=0);
+}
+
+.btn-flashover {
+  background-color: #e44d26;
+  background-image: -moz-linear-gradient(top, #e44d26, #f16529);
+  background-image: -ms-linear-gradient(top, #e44d26, #f16529);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#e44d26), to(#f16529));
+  background-image: -webkit-linear-gradient(top, #e44d26, #f16529);
+  background-image: -o-linear-gradient(top, #e44d26, #f16529);
+  background-image: linear-gradient(top, #e44d26, #f16529);
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#e44d26', endColorstr='#f16529', GradientType=0);
+  border-color: #e44d26 #e44d26 #e44d26;
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+}
+.btn-flashover:hover,
+.btn-flashover:active,
+.btn-flashover.active,
+.btn-flashover.disabled,
+.btn-flashover[disabled] {
+  background-color: #f16529;
+  color: #ffffff;
+}
+.btn-flashover:active, .btn-flashover.active {
+  background-color: #e44d26 \9;
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .navbar .nav .active > a, .navbar .nav .active > a:hover {
@@ -117,4 +151,13 @@ select,
 
 .icon-white {
   background-image: url("/static/glyphicons-halflings-white.png");
+}
+
+/* make progress bars quicker */
+.progress .bar {
+  -webkit-transition: width 0.3s linear;
+  -moz-transition: width 0.3s linear;
+  -ms-transition: width 0.3s linear;
+  -o-transition: width 0.3s linear;
+  transition: width 0.3s linear;
 }

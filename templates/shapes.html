@@ -1,0 +1,106 @@
+$def with (sidebar, job, status, meta, stats)
+$var title: shapes
+
+<div class="content">
+  <div class="row">
+    $:sidebar
+    
+    $code:
+      pix = 16
+    <div class="span8 pull-right">
+      <div class="pagination pagination-right">
+        <ul>
+          <li class="left-arrow disabled"><a href>&larr;</a></li>
+          <li class="page-count active"><a></a></li>
+          <li class="right-arrow"><a href>&rarr;</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="span8">
+      <ul class="thumbnails thumbnails-compact">
+      $for i in range(pix):
+        <li>
+          <a>
+            <div id="item${i}" class="thumbnail th138 disabled"></div>
+          </a>
+        </li>
+      </ul>
+    </div>
+    <div class="span8 pull-right">
+      <div class="pagination pagination-right">
+        <ul>
+          <li class="left-arrow disabled"><a href>&larr;</a></li>
+          <li class="page-count active"><a></a></li>
+          <li class="right-arrow"><a href>&rarr;</a></li>
+        </ul>
+      </div>
+    </div>
+    
+</div>
+<script type="text/javascript">
+var images = $:json(meta['shapes']);
+var max = $pix;
+
+clearImg = function(i) {
+  var div = $$('div#item' + i);
+  div.empty();
+  div.parent().removeAttr('href');
+  div.addClass('disabled');
+}
+
+setImg = function(i, img) {
+  var div = $$('div#item' + i);
+  div.parent().attr('href', '/shape/$job/' + img['id']);
+  div.empty();
+  div.append('<img src="/image-thumb-svg/$job/' + img['id'] + '/132" />');
+  div.removeClass('disabled');
+}
+
+updateHash = function() {
+  var page = 1;
+  
+  if (window.location.hash) {
+    page = parseInt(window.location.hash.slice(1));
+  }
+  
+  var start = max * (page - 1);
+  var end = max * page;
+  var pages = Math.ceil(images.length / max);
+  
+  for (var i = 0; i < max; i++)
+    clearImg(i);
+  
+  var i = 0;
+  for (var j = start; j < end; j++)
+  {
+    if (j < images.length)
+      setImg(i, images[j]);
+    i++;
+  }
+  
+  var left = $$('li.left-arrow');
+  var right = $$('li.right-arrow');
+  if (end >= images.length)
+  {
+    right.addClass('disabled');
+    right.children('a').removeAttr('href').removeAttr('title');
+  } else {
+    right.removeClass('disabled');
+    right.children('a').attr('href', '#' + (page + 1)).attr('title', 'next page');
+  }
+  
+  if (start != 0)
+  {
+    left.removeClass('disabled')
+    left.children('a').attr('href', '#' + (page - 1)).attr('title', 'previous page');
+  } else {
+    left.addClass('disabled');
+    left.children('a').removeAttr('href').removeAttr('title');
+  }
+  
+  $$('li.page-count a').empty().append(page + ' / ' + pages);
+}
+updateHash();
+
+$$(window).bind('hashchange', updateHash);
+</script>

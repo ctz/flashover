@@ -1,0 +1,68 @@
+$def with (current, job, status, meta, stats)
+
+$def desc_link(icon, name_single, name_plural, key):
+  $if len(meta[key]):
+    <i class="icon-$icon"></i> ${len(meta[key])} ${plural(meta[key], name_single, name_plural)}
+  $else:
+    <i class="icon-$icon"></i> No ${plural(0, name_single, name_plural)}
+
+$code:
+  def shapes_link():
+    return desc_link('asterisk', 'shape', 'shapes', 'shapes')
+  
+  def images_link():
+    return desc_link('picture', 'image', 'images', 'images')
+
+  def sounds_link():
+    return desc_link('volume-up', 'sound', 'sounds', 'sounds')
+
+  def binaries_link():
+    return desc_link('file', 'binary', 'binaries', 'binaries')
+
+$var shapes_link: $:shapes_link()
+$var images_link: $:images_link()
+$var sounds_link: $:sounds_link()
+$var binaries_link: $:binaries_link()
+    
+$def nav_entry(content, key):
+  $if len(meta[key]):
+    <li
+    $if current == key:
+      class="active"
+    ><a href="/$key/$job">$:content</a></li>
+  $else:
+    <li><span class="disabled">$:content</span></li>
+
+<div class="span2">
+  <ul class="nav nav-list">
+    <li
+    $if current == 'intro':
+      class="active"
+    ><a href="/results/$job"><i class="icon-home"></i> Overview</a></li>
+    <hr/>
+    
+    <li class="nav-header">
+      Assets
+    </li>
+    $:nav_entry(shapes_link(), 'shapes')
+    $:nav_entry(images_link(), 'images')
+    $:nav_entry(sounds_link(), 'sounds')
+    $:nav_entry(binaries_link(), 'binaries')
+    
+    <hr/>
+    <li class="nav-header">
+      Structure
+    </li>
+    <li><a href="/timeline/$job"><i class="icon-forward"></i> Timeline</a></li>
+    <li><a href="/scripts/$job"><i class="icon-list"></i> Scripts</a></li>
+    <li><a href="/metadata/$job"><i class="icon-tags"></i> Metadata</a></li>
+    
+    <hr/>
+    
+    <li><a href="/input-file/$job"><i class="icon-download-alt"></i> Download SWF</a></li>
+    <li><span class="disabled" title="input file size"><i class="icon-resize-full"></i> $filesize(meta['filesize'])</span></li>
+    <li><span class="disabled" title="processing time"><i class="icon-time"></i> $duration(meta['parse_time'])</span></li>
+    <li><span class="disabled" title="time until deletion"><i class="icon-trash"></i> $duration(stats['timestamp'] + 60 * 60 - time_now)</span></li>
+    
+  </ul>
+</div>

@@ -2,6 +2,9 @@ import web
 from config import db_db, db_user, db_pass
 import time
 
+def hours_ago(n):
+    return time.time() - (n * 60 * 60)
+
 class dba(object):
     QUEUE_ORDERING = 'priority DESC, timestamp ASC'
     
@@ -9,11 +12,11 @@ class dba(object):
         self.conn = web.database(dbn = 'mysql', db = db_db, user = db_user, pw = db_pass)
         
     def get_queue_head(self):
-        while True:
-            results = self.conn.select('incoming', order = dba.QUEUE_ORDERING, limit = 1)
-            if len(results):
-                return self.conn.transaction(), results[0]['guid']
-            time.sleep(2)
+        results = self.conn.select('incoming', order = dba.QUEUE_ORDERING, limit = 1)
+        if len(results):
+            return self.conn.transaction(), results[0]['guid']
+        else:
+            return None, None
             
     def queue_position(self, job):
         jobs = self.conn.select('incoming', order = dba.QUEUE_ORDERING)
@@ -74,9 +77,16 @@ class dba(object):
         return rows[0]
 
     def get_stats_24hr(self):
-        return self.get_stats(cutoff = time.time() - (24 * 60 * 60))
+        return self.get_stats(cutoff = hours_ago(24))
 
     def get_stats_2hr(self):
-        return self.get_stats(cutoff = time.time() - (2 * 60 * 60))
+        return self.get_stats(cutoff = hours_ago(2))
+    
+    def get_cleanable(self):
+        rows = self.conn.select('completed', where = 'cleaned = 0 and timestamp < $cutoff', what = 'guid', vars = dict(cutoff = hours_ago(2)))
+        return [j['guid'] for j in rows]
         
+    def set_cleaned(self, job):
+        self.conn.update('completed', where = 'guid = $guid', cleaned = 1, vars = dict(guid = str(job)))
+    
 db = dba()

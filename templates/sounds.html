@@ -1,0 +1,144 @@
+$def with (sidebar, job, status, meta, stats)
+$var title: sounds
+
+<div class="content">
+  <div class="row">
+    $:sidebar
+    
+    <div class="span8">
+      <table class="table table-condensed">
+        <thead>
+          <tr>
+            <th />
+            <th>Type</th>
+            <th>Length</th>
+            <th>Size</th>
+          </tr>
+          
+        $for s in meta['sounds']:
+          <tr>
+            <td rowspan="2">
+              <a href="#play-${s['id']}"
+                 class="btn btn-large btn-flashover play-button"
+                 id="play-button-${s['id']}"
+                 data-mimetype="${s['mimetype']}"
+                 data-url="/sound-raw/$job/${s['id']}"
+                 title="play"><i class="icon-play"></i></a>
+              <a href="#pause-${s['id']}" class="btn btn-large active pause-button" id="pause-button-${s['id']}" title="pause"><i class="icon-pause"></i></a>
+              <a href="/sound-raw/$job/${s['id']}" class="btn btn-large btn-flashover" title="download"><i class="icon-download"></i></a>
+            </td>
+            <td>
+              $if s['type'] == 'MP3':
+                <span class="label label-info" title="encoding">${s['version']} ${s['layer']}</span>
+                <span class="label" title="sample rate">${s['samplerate']} KHz</span>
+                <span class="label" title="MPEG bitrate">${int(s['bitrate'])} kbps</span>
+                $if s['vbr']:
+                  <span class="label" title="variable bitrate">VBR</span>
+                $if s['channels'] == 1:
+                  <span class="label" title="1 channel">Mono</span>
+                $else:
+                  <span class="label" title="2 channels">Stereo</span>
+              $else:
+                Unknown type
+            </td>
+            <td>${duration(s.get('time', 0))}</td>
+            <td>${filesize(s['filesize'])}</td>
+          </tr>
+          <tr>
+            <td colspan="3">
+              <div class="progress progress-striped active" style="height: 10px">
+                <div id="progress-${s['id']}" class="bar" style="width: 0%"></div>
+              </div>
+            </td>
+          </tr>
+        </thead>
+      </table>
+    </div>
+  </div>
+</div>
+
+<audio id="player">
+</audio>
+
+<script>
+
+updateHash = function() {
+  var hash = '';
+  var action = 'init';
+  var idx = 0;
+  var audio = $$('#player').get(0);
+  
+  if (window.location.hash) {
+    hash = window.location.hash;
+  }
+  
+  if (hash.search('#play-') == 0) {
+    idx = parseInt(hash.slice(6));
+    action = 'play';
+  }
+  
+  if (hash.search('#pause-') == 0) {
+    idx = parseInt(hash.slice(6));
+    action = 'pause';
+  }
+  
+  $$('.pause-button').hide();
+  $$('.play-button').show();
+  $$('.play-button').each(function() {
+    var mime = this.getAttribute('data-mimetype');
+    if (!audio.canPlayType(mime)) {
+      $$(this).addClass('disabled').removeAttr('href').attr('title', 'your browser cannot play ' + mime);
+    }
+  });
+  
+  switch (action)
+  {
+    case 'init':
+      break;
+    
+    case 'play':
+      var pb = $$('#play-button-' + idx);
+      var url = pb.attr('data-url');
+      var mime = pb.attr('data-mimetype');
+      pb.hide();
+      $$('#pause-button-' + idx).show();
+      
+      audio.pause();
+      
+      var ae = $$(audio);
+      ae.unbind('ended');
+      ae.unbind('canplay');
+      ae.unbind('timeupdate');
+      
+      ae.bind('ended', function(e) {
+        document.location.hash = '#pause-' + idx;
+        
+        $$('#progress-' + idx).css('width', '100%');
+        window.setTimeout(function() {
+          $$('#progress-' + idx).css('width', '0%');
+        }, 1000);
+      });
+      ae.bind('canplay', function(e) {
+        $$('#progress-' + idx).css('width', '0%');
+      });
+      ae.bind('timeupdate', function(e) {
+        $$('#debug').html(audio.currentTime + ' : ' + audio.duration);
+        var pc = (audio.currentTime / audio.duration * 100);
+        $$('#progress-' + idx).css('width', pc + '%');
+      });
+      
+      audio.src = url;
+      audio.load();
+      audio.play();
+      break;
+    
+    case 'pause':
+      $$('#progress-' + idx).css('width', '0%');
+      audio.pause();
+      break;
+  }
+}
+updateHash();
+
+$$(window).bind('hashchange', updateHash);
+</script>

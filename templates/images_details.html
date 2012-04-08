@@ -1,0 +1,42 @@
+$def with (sidebar, job, meta)
+$var title: image $(meta['id'] + 1)
+
+<div class="content">
+  <div class="row">
+    $:sidebar
+    
+    <div class="span8">
+      <a href="/image-raw/$job/$meta['id']">
+        <div class="thumbnail"><img src="/image-raw/$job/$meta['id']" /></div>
+      </a>
+      
+      <div class="row">
+        <div class="span4">
+          <dl>
+            <dt>Original file type:</dt>
+              <dd>$meta['original_type']</dd>
+            $if meta['original_type'] != meta['effective_type']:
+              <dt>Extracted file type:</dt>
+                <dd>$meta['effective_type']</dd>
+            <dt>Pixel format:</dt>
+              <dd>$meta['img_mode']</dd>
+          </dl>
+        </div>
+        <div class="span4">
+          <dl>
+            <dt>Extraction method:</dt>
+              <dd>$meta['extract']</dd>
+            <dt>Dimensions:</dt>
+              <dd>${meta['img_dims'][0]} x ${meta['img_dims'][1]}px</dd>
+            <dt>File size:</dt>
+              <dd>$filesize(meta['filesize'])</dd>
+          </dl>
+        </div>
+        <div class="span8 pull-center">
+          <a class="btn btn-flashover" href="/image-raw/$job/$meta['id']"><i class="icon-download"></i> Download</a>
+          <a class="btn btn-flashover" href="http://api.imgur.com/2/upload?url=http://flashover.ifihada.com/image-raw/$job/$meta['id']"><i class="icon-share"></i> Share with imgur.com</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
