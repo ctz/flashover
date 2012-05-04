@@ -10,34 +10,37 @@ import svgthumb
 import Image
 from StringIO import StringIO
 
-job = '([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})'
-id = '(\d+)'
-sz = '(\d+)'
+job_re = '([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})'
+id_re = '(\d+)'
+sz_re = '(\d+)'
 
 urls = (
     '/(home)?', 'front',
     '/about', 'about',
     '/api', 'api',
     '/stats', 'stats',
-    '/await/' + job, 'await',
-    '/status/' + job, 'job_status',
-    '/results/' + job, 'job_intro',
+    '/await/' + job_re, 'await',
+    '/status/' + job_re, 'job_status',
+    '/results/' + job_re, 'job_intro',
     '/file-upload', 'file_upload',
-    '/image/' + job + '/' + id, 'image_details',
-    '/shape/' + job + '/' + id, 'shape_details',
-    '/image-thumb/' + job + '/' + id + '/' + sz, 'image_thumb',
-    '/image-thumb-svg/' + job + '/' + id + '/' + sz, 'svg_thumb',
-    '/image-svg/' + job + '/' + id, 'svg_raw',
-    '/image-raw/' + job + '/' + id, 'image_raw',
-    '/bin-raw/' + job + '/' + id, 'bin_raw',
-    '/sound-raw/' + job + '/' + id, 'sound_raw',
-    '/input-file/' + job, 'input_file_raw',
-    '/shapes/' + job, 'job_shapes',
-    '/images/' + job, 'job_images',
-    '/sounds/' + job, 'job_sounds',
-    '/binaries/' + job, 'job_binaries',
-    '/log/' + job, 'log_raw',
-    '/svg/' + job, 'svg_full_raw',
+    '/image/' + job_re + '/' + id_re, 'image_details',
+    '/shape/' + job_re + '/' + id_re, 'shape_details',
+    '/image-thumb/' + job_re + '/' + id_re + '/' + sz_re, 'image_thumb',
+    '/image-thumb-svg/' + job_re + '/' + id_re + '/' + sz_re, 'svg_thumb',
+    '/image-svg/' + job_re + '/' + id_re, 'svg_raw',
+    '/image-raw/' + job_re + '/' + id_re, 'image_raw',
+    '/bin-raw/' + job_re + '/' + id_re, 'bin_raw',
+    '/sound-raw/' + job_re + '/' + id_re, 'sound_raw',
+    '/input-file/' + job_re, 'input_file_raw',
+    '/shapes/' + job_re, 'job_shapes',
+    '/images/' + job_re, 'job_images',
+    '/sounds/' + job_re, 'job_sounds',
+    '/binaries/' + job_re, 'job_binaries',
+    '/metadata/' + job_re, 'job_metadata',
+    '/timeline/' + job_re, 'job_timeline',
+    '/log/' + job_re, 'log_raw',
+    '/svg/' + job_re, 'svg_full_raw',
+    '/bookmarklet-target/', 'start_fetch',
 )
 app = web.application(urls, globals())
 
@@ -51,6 +54,9 @@ class base_page(object):
     Basic content-type-non-specific error handling.
     """
     methods = set(['GET'])
+    
+    def process(self, *args, **kwargs):
+        raise NotImplementedError()
 
     def GET(self, *args, **kwargs):
         if 'GET' not in self.methods:
@@ -120,6 +126,21 @@ class stats(base_html):
                             stats2hr = db.get_stats_2hr(),
                             statsall = db.get_stats())
 
+def setup_job():
+    job = generate_uuid()
+    jobdir = path.join(config.inputdir, str(job))
+    os.mkdir(jobdir, 0700)
+    return job, jobdir
+                            
+class start_fetch(base_html):
+    def process(self):
+        w = web.input(url = None)
+        if w.url is None:
+            raise web.NotAcceptable('We need a URL parameter')
+        job, _ = setup_job()
+        db.queue_job(job, fetchurl = w.url)
+        raise web.seeother('/await/' + str(job))
+
 class file_upload(base_json):
     methods = set(['POST'])
     
@@ -130,9 +151,7 @@ class file_upload(base_json):
             return json(dict(error = "Not a flash file.  Flash files must start with FWS or CWS.",
                              size = len(w.file.value)))
         
-        job = generate_uuid()        
-        jobdir = path.join(config.inputdir, str(job))
-        os.mkdir(jobdir, 0700)
+        job, jobdir = setup_job()
         with open(path.join(jobdir, config.inputfn), 'wb') as f:
             f.write(w.file.value)
         
@@ -156,18 +175,26 @@ class job_status(base_json):
             return json(dict(status = status))
 
 class job_base(base_html):
+    WHERE = None
+    
     def process(self, job):
         job = uuid(job)
         status, location = get_job_status(job)
         meta = get_meta(job)
-        stats = db.get_completed(job)
         if 'error' in meta:
             return render.failed(meta['error'], str(job))
         else:
+            stats = db.get_completed(job)
             sidebar = part_render.part_sidebar(current = self.WHERE, job = job, status = status, meta = meta['meta'], stats = stats)
-            return getattr(render, self.WHERE)(sidebar = sidebar, job = job, status = status, meta = meta['meta'], stats = stats)
+            args = self.get_template_args(job, meta)
+            return getattr(render, self.WHERE)(sidebar = sidebar, job = job, **args)
+    
+    def get_template_args(self, job, meta):
+        return dict(meta = meta['meta'])
 
 class job_item_base(base_html):
+    WHERE = None
+    
     def process(self, job, id):
         job = uuid(job)
         id = int(id)
@@ -176,12 +203,16 @@ class job_item_base(base_html):
         stats = db.get_completed(job)
         if 'error' in meta:
             return render.failed(meta['error'], str(job))
-        itemmeta = meta['meta'][self.WHERE][id]
+        itemmeta = self.get_template_args(job, meta, id)
         sidebar = part_render.part_sidebar(current = self.WHERE, job = job, status = status, meta = meta['meta'], stats = stats)
-        return getattr(render, self.WHERE + '_details')(sidebar = sidebar, job = job, meta = itemmeta)
+        return getattr(render, self.WHERE + '_details')(sidebar = sidebar, job = job, **itemmeta)
+    
+    def get_template_args(self, job, meta, id):
+        items_of_type = dict(meta['meta'][self.WHERE])
+        return dict(meta = items_of_type[id])
             
 class job_intro(job_base):
-    WHERE = 'intro'
+    WHERE = 'results'
     
 class job_shapes(job_base):
     WHERE = 'shapes'
@@ -195,6 +226,22 @@ class job_sounds(job_base):
 class job_binaries(job_base):
     WHERE = 'binaries'
 
+class job_metadata(job_base):
+    WHERE = 'metadata'
+    def get_template_args(self, job, meta):
+        import swfmeta
+        reload(swfmeta)
+        md = swfmeta.wrapper_metadata(get_file_for_job(job, config.inputfn))
+        return dict(metadata = md)
+
+class job_timeline(job_base):
+    WHERE = 'timeline'
+    def get_template_args(self, job, meta):
+        import swfmeta
+        reload(swfmeta)
+        tl = swfmeta.wrapper_timeline(get_file_for_job(job, config.inputfn))
+        return dict(timeline = tl)
+
 class image_details(job_item_base):
     WHERE = 'images'
 
@@ -206,7 +253,7 @@ class image_thumb(base_image):
         web.header('Content-Type', 'application/octet-stream')
         job = uuid(job)
         meta = get_meta(job)['meta']
-        img = meta['images'][int(id)]
+        img = dict(meta['images'])[int(id)]
         with get_file_for_job(job, img['filename']) as f:
             im = Image.open(f)
             im.load()
@@ -219,7 +266,7 @@ class svg_thumb(base_image):
   def process(self, job, id, px):
     job = uuid(job)
     meta = get_meta(job)['meta']
-    shp = meta['shapes'][int(id)]
+    shp = dict(meta['shapes'])[int(id)]
     with get_file_for_job(job, shp['filename']) as f:
       web.header('Content-Type', 'image/svg+xml')
       return svgthumb.svg_thumb(f, int(px))
@@ -242,16 +289,17 @@ def serve_binary(job, chooser, mimetype = 'application/octet-stream'):
 
 class image_raw(base_image):
     def process(self, job, id):
-        return serve_binary(job, lambda meta: meta['images'][int(id)]['filename'])
+        return serve_binary(job, lambda meta: dict(meta['images'])[int(id)]['filename'])
 
 class bin_raw(base_image):
     def process(self, job, id):
-        return serve_binary(job, lambda meta: meta['binaries'][int(id)]['filename'])
+        return serve_binary(job, lambda meta: dict(meta['binaries'])[int(id)]['filename'],
+                            mimetype = lambda meta: dict(meta['binaries'])[int(id)]['mimetype'])
         
 class sound_raw(base_image):
     def process(self, job, id):
-        return serve_binary(job, lambda meta: meta['sounds'][int(id)]['filename'],
-                            mimetype = lambda meta: meta['sounds'][int(id)]['mimetype'])
+        return serve_binary(job, lambda meta: dict(meta['sounds'])[int(id)]['filename'],
+                            mimetype = lambda meta: dict(meta['sounds'])[int(id)]['mimetype'])
 
 class svg_full_raw(base_image):
     def process(self, job):
@@ -259,7 +307,7 @@ class svg_full_raw(base_image):
 
 class svg_raw(base_image):
     def process(self, job, id):
-        return serve_binary(job, lambda meta: meta['shapes'][int(id)]['filename'], mimetype = 'image/svg+xml')
+        return serve_binary(job, lambda meta: dict(meta['shapes'])[int(id)]['filename'], mimetype = 'image/svg+xml')
 
 class log_raw(base_image):
     def process(self, job):
@@ -268,7 +316,6 @@ class log_raw(base_image):
 class input_file_raw(base_image):
     def process(self, job):
         return serve_binary(job, lambda meta: meta['input'], mimetype = 'application/x-shockwave-flash')
-
     
 if __name__ == '__main__':
   app.run()

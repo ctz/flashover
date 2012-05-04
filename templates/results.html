@@ -1,5 +1,11 @@
-$def with (sidebar, job, status, meta, stats)
+$def with (sidebar, job, meta)
 $var title: overview
+
+$code:
+  shapes = elements(meta['shapes'])
+  images = elements(meta['images'])
+  sounds = elements(meta['sounds'])
+  binaries = elements(meta['binaries'])
 
 <div class="content">
   <div class="row">
@@ -9,19 +15,19 @@ $var title: overview
       pix = 8
     <div class="span4 pull-center">
       <ul class="thumbnails thumbnails-compact">
-      $for shp in meta['shapes'][:pix]:
+      $for shp in shapes[:pix]:
         <li>
-          <a href="/shape/$job/${shp['id']}">
+          <a href="/shape/$job/${shp['id']}" title="shape ${shp['id']}">
             <div class="thumbnail th54">
               <img src="/image-thumb-svg/$job/$shp['id']/44" />
             </div>
           </a>
         </li>
-      $for i in range(pix - min(pix, len(meta['shapes']))):
+      $for i in range(pix - min(pix, len(shapes))):
         <li>
           <div class="thumbnail disabled th54"></div>
         </li>
-      $if meta['shapes']:
+      $if shapes:
         <a href="/shapes/$job" class="btn btn-large btn-flashover">
           $:sidebar.shapes_link
         </a>
@@ -34,19 +40,19 @@ $var title: overview
     
     <div class="span4 pull-center">
       <ul class="thumbnails thumbnails-compact">
-      $for img in meta['images'][:pix]:
+      $for img in images[:pix]:
         <li>
-          <a href="/image/$job/$img['id']">
+          <a href="/image/$job/$img['id']" title="image ${img['id']}">
             <div class="thumbnail th54">
               <img src="/image-thumb/$job/$img['id']/44" />
             </div>
           </a>
         </li>
-      $for i in range(pix - min(pix, len(meta['images']))):
+      $for i in range(pix - min(pix, len(images))):
         <li>
           <div class="thumbnail disabled th54"></div>
         </li>
-      $if meta['images']:
+      $if images:
         <a href="/images/$job" class="btn btn-large btn-flashover">
           $:sidebar.images_link
         </a>
@@ -59,19 +65,19 @@ $var title: overview
     
     <div class="span4 pull-center">
       <ul class="thumbnails thumbnails-compact">
-      $for snd in meta['sounds'][:pix]:
+      $for snd in sounds[:pix]:
         <li>
-          <a href="/sound/$job/$snd['id']">
+          <a href="/sound/$job/$snd['id']" title="sound ${snd['id']}">
             <div class="thumbnail th54">
               <i class="icon-volume-up icon-thumbnail"></i>
             </div>
           </a>
         </li>
-      $for i in range(pix - min(pix, len(meta['sounds']))):
+      $for i in range(pix - min(pix, len(sounds))):
         <li>
           <div class="thumbnail disabled th54"></div>
         </li>
-      $if meta['sounds']:
+      $if sounds:
         <a href="/sounds/$job" class="btn btn-large btn-flashover">
           $:sidebar.sounds_link
         </a>
@@ -84,19 +90,19 @@ $var title: overview
     
     <div class="span4 pull-center">
       <ul class="thumbnails thumbnails-compact">
-      $for bin in meta['binaries'][:pix]:
+      $for bin in binaries[:pix]:
         <li>
-          <a href="/binary/$job/$id">
+          <a href="/bin-raw/$job/${bin['id']}" title="binary ${bin['id']}: size ${filesize(bin['filesize'])} type ${bin['type']} ">
             <div class="thumbnail th54">
               <i class="icon-file icon-thumbnail"></i>
             </div>
           </a>
         </li>
-      $for i in range(pix - min(pix, len(meta['binaries']))):
+      $for i in range(pix - min(pix, len(binaries))):
         <li>
           <div class="thumbnail disabled th54"></div>
         </li>
-      $if meta['binaries']:
+      $if binaries:
         <a href="/binaries/$job" class="btn btn-large btn-flashover">
           $:sidebar.binaries_link
         </a>

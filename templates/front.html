@@ -46,7 +46,7 @@ $var title: online flash decompiler
   <div class="well span8 pull-right">
     <h2>Bookmarklet</h2>
     <p class="pull-center">
-      <a class="btn btn-flashover btn-large" href="javascript:void((function(){var%20e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('src','http://localhost:8080/static/bookmarket.js');document.body.appendChild(e)})())">
+      <a class="btn btn-flashover btn-large" href="javascript:void((function(){var%20e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('src','http://localhost:8080/static/bookmarklet.js');document.body.appendChild(e)})())">
         Inspect with flashover
       </a>
     </p>
@@ -83,13 +83,13 @@ $$('#file-upload').fileupload({
     $$('#upload-error').show();
   },
   done: function(e, data) {
-    if (data.result.error)
+    result = JSON.parse(data.result);
+    if (result.error)
     {
-      $$('#upload-error-detail').text(data.result.error);
+      $$('#upload-error-detail').text(result.error);
       $$('#upload-error').show();
       return;
     }
-    result = JSON.parse(data.result);
     document.location = '/await/' + result.job;
   },
 });

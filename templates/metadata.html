@@ -1,0 +1,89 @@
+$def with (sidebar, job, metadata)
+$var title: metadata
+
+$def yes():
+  <span class="label label-success"><i class="icon-white icon-ok"></i></span>
+$def no():
+  <span class="label label-important"><i class="icon-white icon-remove"></i></span>
+$def start():
+  <table class="table table-bordered"><tbody>
+$def end():
+  </tbody></table>
+$def title(t):
+  <h3>$t</h3>
+$def value(key, val, unit = ''):
+  <tr><th width="30%">$:key</th><td>$:val $:unit</td></tr>
+
+$def value_str(title, val, unit = ''):
+  $:value(title, metadata.get(val, 'n/a'), unit)
+$def value_hex(title, val):
+  $:value(title, metadata.get(val, '').encode('hex'))
+$def value_pre(title, val):
+  $:value(title, '<pre>' + metadata.get(val, 'n/a') + '</pre>')
+$def value_bool(title, val):
+  $:value(title, yes() if metadata.get(val, False) else no())
+$def value_datemillis(title, val):
+  $if val in metadata:
+    $:value(title, datestr(int(metadata.get(val) / 1000.0)))
+$def value_color(title, val):
+  $code:
+    col = '#' + metadata.get(val, 'ff000000')[2:]
+  $:value(title, '<span class="label" style="border: 1px solid black; background-color: ' + col + '">&nbsp;&nbsp;&nbsp;&nbsp;</span>', col)
+
+<div class="content">
+  <div class="row">
+    $:sidebar
+    
+    <div class="span8">
+      $:title('SWF file')
+      $:start()
+      $:value_str('File version', 'swf_version')
+      $:value_bool('Compressed?', 'swf_compressed')
+      $:value_str('Tags in file', 'swf_tags', 'tags')
+      $:value_color('Background colour', 'background_color')
+      $:end()
+      
+      $if 'prod_product' in metadata:
+        $:title('Generating product')
+        $:start()
+        $:value_str('Product', 'prod_product')
+        $:value_str('Edition', 'prod_edition')
+        $:value_str('Version', 'prod_version')
+        $:value_datemillis('Compile time', 'prod_compiletime')
+        $:end()
+      
+      $if 'lim_maxrecurse' in metadata:
+        $:title('Movie limits')
+        $:start()
+        $:value_str('Recursion limit', 'lim_maxrecurse')
+        $:value_str('Timeout', 'lim_timeout', ' seconds')
+        $:end()
+      
+      $:title('Debugging and DRM')
+      $:start()
+      $if 'dbg_guid' in metadata:
+        $:value_hex('Debug UUID', 'dbg_guid')
+      $:value_bool('Protected?', 'dbg_protected')
+      $if metadata['dbg_protected']:
+        $:value_str('Edit password hash', 'dbg_protect_password')
+      $:value_bool('Debuggable?', 'dbg_debuggable')
+      $if metadata['dbg_debuggable']:
+        $:value_str('Debug password hash', 'dbg_debug_password')
+      $:end()
+      
+      $:title('Attributes')
+      $:start()
+      $:value_bool('Use direct blit?', 'attr_directblit')
+      $:value_bool('Use GPU?', 'attr_usegpu')
+      $:value_bool('Has metadata?', 'attr_hasmeta')
+      $:value_bool('Uses actionscript 3?', 'attr_as3')
+      $:value_bool('Uses network?', 'attr_network')
+      $:end()
+      
+      $if metadata['xml_metadata']:
+        $:title('XML metadata')
+        $for x in metadata['xml_metadata']:
+          <pre>$:{xmlquote(x)}</pre>
+    </div>
+  </div>
+</div>

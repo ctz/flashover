@@ -1,0 +1,35 @@
+$def with (sidebar, job, meta)
+$var title: binaries
+
+<div class="content">
+  <div class="row">
+    $:sidebar
+    
+    <div class="span8">
+      <table class="table table-condensed">
+        <thead>
+          <tr>
+            <th />
+            <th>Type (guessed)</th>
+            <th>MIME type (guessed)</th>
+            <th >Size</th>
+          </tr>
+        </thead>
+          
+        $for s in meta['binaries']:
+          <tr>
+            <td>
+              <a href="/bin-raw/$job/${s['id']}" class="btn btn-large btn-flashover" title="download"><i class="icon-download"></i></a>
+            </td>
+            <td>
+              ${s['type']}
+            </td>
+            <td>
+              ${s['mimetype']}
+            </td>
+            <td>${filesize(s['filesize'])}</td>
+          </tr>
+      </table>
+    </div>
+  </div>
+</div>

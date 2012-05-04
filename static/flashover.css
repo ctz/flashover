@@ -160,3 +160,38 @@ div.well > h4,
 div.well > p {
   text-shadow: 0px 1px 1px #fff;
 }
+
+div.actor-def {
+  height: 13px;
+  margin-top: 1px;
+  font-size: 9px;
+  text-align: right;
+  background-color: #fefefe;
+  overflow: hidden;
+}
+
+div.scrollable-x {
+  overflow-x: scroll;
+}
+
+table.timeline {
+  border-spacing: 1px;
+  border-collapse: collapse;
+}
+
+table.timeline tr td {
+  height: 12px;
+  width: 12px;
+}
+
+div.timeline-shown {
+  background-color: red;
+  height: 12px;
+  width: 12px;
+}
+
+div.timeline-notshown {
+  background-color: #fefefe;
+  height: 12px;
+  width: 12px;
+}

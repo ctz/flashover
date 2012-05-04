@@ -38,6 +38,17 @@ CREATE TABLE `incoming` (
   KEY `priority` (`priority`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Incoming job queue.'$$
 
+delimiter $$
+
+CREATE TABLE `fetches` (
+  `guid` char(36) NOT NULL,
+  `user` int(11) NOT NULL,
+  `priority` int(11) NOT NULL,
+  `timestamp` int(11) NOT NULL,
+  `url` text NOT NULL,
+  PRIMARY KEY (`guid`),
+  KEY `priority` (`priority`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Incoming fetch queue.'$$
 
 delimiter $$
 

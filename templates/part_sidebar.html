@@ -1,10 +1,13 @@
 $def with (current, job, status, meta, stats)
 
+$def plain_link(icon, name):
+  <i class="icon-$icon"></i> $name
+
 $def desc_link(icon, name_single, name_plural, key):
   $if len(meta[key]):
-    <i class="icon-$icon"></i> ${len(meta[key])} ${plural(meta[key], name_single, name_plural)}
+    $:plain_link(icon, ('%d' % len(meta[key])) + ' ' + plural(meta[key], name_single, name_plural))
   $else:
-    <i class="icon-$icon"></i> No ${plural(0, name_single, name_plural)}
+    $:plain_link(icon, 'No ' + plural(0, name_single, name_plural))
 
 $code:
   def shapes_link():
@@ -23,8 +26,14 @@ $var shapes_link: $:shapes_link()
 $var images_link: $:images_link()
 $var sounds_link: $:sounds_link()
 $var binaries_link: $:binaries_link()
-    
+
 $def nav_entry(content, key):
+  <li
+  $if current == key:
+    class="active"
+  ><a href="/$key/$job">$:content</a></li>
+  
+$def nav_entry_meta(content, key):
   $if len(meta[key]):
     <li
     $if current == key:
@@ -35,27 +44,23 @@ $def nav_entry(content, key):
 
 <div class="span2">
   <ul class="nav nav-list">
-    <li
-    $if current == 'intro':
-      class="active"
-    ><a href="/results/$job"><i class="icon-home"></i> Overview</a></li>
-    <hr/>
+    $:nav_entry(plain_link('home', 'Overview'), 'results')
     
     <li class="nav-header">
       Assets
     </li>
-    $:nav_entry(shapes_link(), 'shapes')
-    $:nav_entry(images_link(), 'images')
-    $:nav_entry(sounds_link(), 'sounds')
-    $:nav_entry(binaries_link(), 'binaries')
+    $:nav_entry_meta(shapes_link(), 'shapes')
+    $:nav_entry_meta(images_link(), 'images')
+    $:nav_entry_meta(sounds_link(), 'sounds')
+    $:nav_entry_meta(binaries_link(), 'binaries')
     
     <hr/>
     <li class="nav-header">
       Structure
     </li>
-    <li><a href="/timeline/$job"><i class="icon-forward"></i> Timeline</a></li>
-    <li><a href="/scripts/$job"><i class="icon-list"></i> Scripts</a></li>
-    <li><a href="/metadata/$job"><i class="icon-tags"></i> Metadata</a></li>
+    $:nav_entry(plain_link('forward', 'Timeline'), 'timeline')
+    $#:nav_entry(plain_link('list', 'Scripts'), 'scripts')
+    $:nav_entry(plain_link('tags', 'Metadata'), 'metadata')
     
     <hr/>
     

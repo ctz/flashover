@@ -11,6 +11,7 @@ import sys
 import time
 
 import swfback
+import urllib
 
 def emit_meta(dir, obj):
     with open(path.join(dir, config.metafn), 'w') as f:
@@ -42,18 +43,33 @@ def process_one(job):
     os.rename(location, outdir)
     return meta
 
-def handle_queue_head(txn, job):
+def process_fetch(job, fetchurl):
+    try:
+        _, location = get_job_status(job)
+        urllib.urlretrieve(fetchurl, path.join(location, config.inputfn))
+        return True
+    except Exception, e:
+        emit_meta(location, dict(error = 'failed to fetch swf. error logged.'))
+        emit_exception(location)
+        return False
+    
+def handle_queue_head(txn, job, fetchurl):
     if txn is None:
         return
+    if fetchurl is not None:
+        if not process_fetch(job, fetchurl):
+            return
     meta = process_one(job)
     db.finish_job(job, meta, swfback.produce_stats(meta))
 
 def check_queue():
+    txn = None
     try:
-        txn, job = db.get_queue_head()
-        handle_queue_head(txn, job)
+        txn, job, fetchurl = db.get_queue_head()
+        handle_queue_head(txn, job, fetchurl)
     except:
-        txn.rollback()
+        if txn:
+            txn.rollback()
         raise
     else:
         if txn:

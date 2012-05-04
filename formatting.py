@@ -1,6 +1,8 @@
 import web
 import time
 import json
+from datetime import datetime
+import xml.dom.minidom as xmldom
 
 duration_units = (
   'ns',
@@ -42,17 +44,28 @@ def plural(n, single, plural):
         n = len(n)
     return [plural, single][n == 1]
 
-def audio_desc(meta):
-    if meta['type'] == 'MP3':
-        inp = dict(meta)
-        inp['stereo'] = ['mono', 'stereo'][meta['channels'] != 1]
-        inp['bitrate'] = str(int(meta['bitrate'])) + 'kbps'
-        if meta['vbr']:
-            inp['bitrate'] += ' (VBR)'
-        return "%(version)s %(layer)s %(samplerate)sKHz %(bitrate)s %(stereo)s" % inp
-    else:
-        return 'unknown'
-    
+def xmlquote(dat):
+    xml = xmldom.parseString(dat)
+    ret = xml.toprettyxml(indent = '  ', newl = '\n')
+    return web.htmlquote(ret).replace('\n', '<br/>')
+
+def datestr(timestamp):
+    return datetime.fromtimestamp(timestamp).isoformat()
+
+def elements(mapping):
+    r = []
+    # stupid json!
+    for id, el in mapping:
+        r.append(el)
+    return r
+
+def reason_list(l):
+    out = dict()
+    for x in l:
+        out[x] = out.get(x, 0) + 1
+    for k in sorted(out.keys()):
+        yield k, out[k]
+
 exports = dict(
     filesize = filesize,
     duration = duration,
@@ -61,5 +74,9 @@ exports = dict(
     plural = plural,
     time_now = time.time(),
     json = json.dumps,
-    audio_desc = audio_desc,
+    xmlquote = xmlquote,
+    datestr = datestr,
+    elements = elements,
+    reason_list = reason_list,
+    sorted = sorted,
 )

@@ -1,4 +1,4 @@
-$def with (sidebar, job, status, meta, stats)
+$def with (sidebar, job, meta)
 $var title: shapes
 
 <div class="content">
@@ -50,9 +50,9 @@ clearImg = function(i) {
 
 setImg = function(i, img) {
   var div = $$('div#item' + i);
-  div.parent().attr('href', '/shape/$job/' + img['id']);
+  div.parent().attr('href', '/shape/$job/' + img[0]);
   div.empty();
-  div.append('<img src="/image-thumb-svg/$job/' + img['id'] + '/132" />');
+  div.append('<img src="/image-thumb-svg/$job/' + img[0] + '/132" />');
   div.removeClass('disabled');
 }
 

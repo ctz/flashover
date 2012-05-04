@@ -14,9 +14,10 @@ class dba(object):
     def get_queue_head(self):
         results = self.conn.select('incoming', order = dba.QUEUE_ORDERING, limit = 1)
         if len(results):
-            return self.conn.transaction(), results[0]['guid']
+            r = results[0]
+            return self.conn.transaction(), r['guid'], r['fetchurl']
         else:
-            return None, None
+            return None, None, None
             
     def queue_position(self, job):
         jobs = self.conn.select('incoming', order = dba.QUEUE_ORDERING)
@@ -27,12 +28,13 @@ class dba(object):
         else:
             return dict(position = len(jobs), queue = len(jobs))
             
-    def queue_job(self, job, uid = 0, priority = 100):
+    def queue_job(self, job, uid = 0, priority = 100, fetchurl = None):
         self.conn.insert('incoming',
                          guid = str(job),
                          timestamp = time.time(),
                          priority = priority,
-                         user = uid)
+                         user = uid,
+                         fetchurl = fetchurl)
     
     def finish_job(self, job, meta, stats):
         vars = dict(guid = str(job))
@@ -50,7 +52,11 @@ class dba(object):
                          **stats)
     
     def get_completed(self, job):
-        return self.conn.select('completed', where = 'guid = $job', vars = dict(job = str(job)), limit = 1)[0]
+        rows = self.conn.select('completed', where = 'guid = $job', vars = dict(job = str(job)), limit = 1)
+        if len(rows):
+            return rows[0]
+        else:
+            raise ValueError('completed table missing completed job row')
 
     def get_stats(self, cutoff = 0):
         cols = """

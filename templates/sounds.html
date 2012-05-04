@@ -1,5 +1,8 @@
-$def with (sidebar, job, status, meta, stats)
+$def with (sidebar, job, meta)
 $var title: sounds
+
+$code:
+  not_extracted = []
 
 <div class="content">
   <div class="row">
@@ -15,44 +18,57 @@ $var title: sounds
             <th>Size</th>
           </tr>
           
-        $for s in meta['sounds']:
-          <tr>
-            <td rowspan="2">
-              <a href="#play-${s['id']}"
-                 class="btn btn-large btn-flashover play-button"
-                 id="play-button-${s['id']}"
-                 data-mimetype="${s['mimetype']}"
-                 data-url="/sound-raw/$job/${s['id']}"
-                 title="play"><i class="icon-play"></i></a>
-              <a href="#pause-${s['id']}" class="btn btn-large active pause-button" id="pause-button-${s['id']}" title="pause"><i class="icon-pause"></i></a>
-              <a href="/sound-raw/$job/${s['id']}" class="btn btn-large btn-flashover" title="download"><i class="icon-download"></i></a>
-            </td>
-            <td>
-              $if s['type'] == 'MP3':
-                <span class="label label-info" title="encoding">${s['version']} ${s['layer']}</span>
-                <span class="label" title="sample rate">${s['samplerate']} KHz</span>
-                <span class="label" title="MPEG bitrate">${int(s['bitrate'])} kbps</span>
-                $if s['vbr']:
-                  <span class="label" title="variable bitrate">VBR</span>
-                $if s['channels'] == 1:
-                  <span class="label" title="1 channel">Mono</span>
+        $for id, s in meta['sounds']:
+          $if s['status'] != 'extracted':
+            $code:
+              not_extracted.append(s['reason'])
+          $else:
+            <tr>
+              <td rowspan="2">
+                <a href="#play-${id}"
+                   class="btn btn-large btn-flashover play-button"
+                   id="play-button-${id}"
+                   data-mimetype="${s.get('mimetype', 'application/unknown')}"
+                   data-url="/sound-raw/$job/${id}"
+                   title="play"><i class="icon-play"></i></a>
+                <a href="#pause-${id}" class="btn btn-large active pause-button" id="pause-button-${id}" title="pause"><i class="icon-pause"></i></a>
+                <a href="/sound-raw/$job/${id}" class="btn btn-large btn-flashover" title="download"><i class="icon-download"></i></a>
+              </td>
+              <td>
+                $if s['type'] == 'MP3':
+                  <span class="label label-info" title="encoding">${s['version']} ${s['layer']}</span>
+                  <span class="label" title="sample rate">${s['samplerate']} KHz</span>
+                  <span class="label" title="MPEG bitrate">${int(s['bitrate'])} kbps</span>
+                  $if s['vbr']:
+                    <span class="label" title="variable bitrate">VBR</span>
+                  $if s['channels'] == 1:
+                    <span class="label" title="1 channel">Mono</span>
+                  $else:
+                    <span class="label" title="2 channels">Stereo</span>
                 $else:
-                  <span class="label" title="2 channels">Stereo</span>
-              $else:
-                Unknown type
-            </td>
-            <td>${duration(s.get('time', 0))}</td>
-            <td>${filesize(s['filesize'])}</td>
-          </tr>
-          <tr>
-            <td colspan="3">
-              <div class="progress progress-striped active" style="height: 10px">
-                <div id="progress-${s['id']}" class="bar" style="width: 0%"></div>
-              </div>
-            </td>
-          </tr>
+                  Unknown type
+              </td>
+              <td>${duration(s.get('time', 0))}</td>
+              <td>${filesize(s['filesize'])}</td>
+            </tr>
+            <tr>
+              <td colspan="3">
+                <div class="progress progress-striped active" style="height: 10px">
+                  <div id="progress-${s['id']}" class="bar" style="width: 0%"></div>
+                </div>
+              </td>
+            </tr>
         </thead>
       </table>
+      
+      $if not_extracted:
+        <div class="alert alert-error">
+        ${len(not_extracted)} ${plural(not_extracted, 'sound', 'sounds')} not extracted:
+        <ul>
+        $for reason, count in reason_list(not_extracted):
+          <li><b>${reason}</b> * ${count}</li>
+        </ul>
+        </div>
     </div>
   </div>
 </div>

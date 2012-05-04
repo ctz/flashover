@@ -1,0 +1,38 @@
+$def with (sidebar, job, timeline)
+$var title: metadata
+
+$code:
+  def actorid(act):
+    return '%s-%d' % (act['type'], act.get('id', 0))
+  
+  referenced_items = {}
+  timeline_ids = []
+  for fr in timeline['frames']:
+    for act in fr:
+      referenced_items[actorid(act)] = act
+    timeline_ids.append([actorid(act) for act in fr])
+
+<div class="content">
+  <div class="row">
+    $:sidebar
+    
+    <div class="span1">
+    $for actid in sorted(referenced_items):
+      <div class="actor-def">
+        ${actorid(referenced_items[actid])}
+      </div>
+    </div>
+    <div class="span7 scrollable-x">
+      <table class="timeline">
+        $for actid in sorted(referenced_items):
+          <tr>
+            $for fr in timeline_ids:
+              $if actid in fr:
+                <td><div class="timeline-shown"></div></td>
+              $else:
+                <td><div class="timeline-notshown"></div></td>
+          </tr>
+      </table>
+    </div>
+  </div>
+</div>
