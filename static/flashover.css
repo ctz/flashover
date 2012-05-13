@@ -136,7 +136,7 @@ ul.front li {
   padding: 5px;
 }
 
-a.brand, b.logo {
+a.brand, span.brand-beta, b.logo {
   font-weight: 700;
   font-family: "Dancing Script","Helvetica Neue", Helvetica, Arial, sans-serif;
   color: white;
@@ -151,6 +151,12 @@ b.logo {
   text-shadow: 0px 1px 2px #000;
   padding: 0px;
   padding-right: 20px;
+}
+
+.navbar span.brand-beta {
+  font-size: 18px;
+  vertical-align: super;
+  margin-left: -10px;
 }
 
 div.well > h2,
