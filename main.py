@@ -318,4 +318,7 @@ class input_file_raw(base_image):
         return serve_binary(job, lambda meta: meta['input'], mimetype = 'application/x-shockwave-flash')
     
 if __name__ == '__main__':
-  app.run()
+    if os.name == 'nt':
+        app.run()
+    else:
+        app.wsgifunc()
