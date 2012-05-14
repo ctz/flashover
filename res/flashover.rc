@@ -1,0 +1,18 @@
+args="--chuid www-data --group www-data --stdout /var/log/flashover.log --stderr /var/log/flashover.err --background --make-pidfile --pidfile /var/run/flashover.pid
+
+case "$1" in
+	start)
+		start-stop-daemon "$args" --start /var/www-flashover/daemon.sh
+		;;
+	stop)
+		start-stop-daemon "$args" --stop /var/www-flashover/daemon.sh
+		;;
+	restart)
+		start-stop-daemon "$args" --oknodo --stop /var/www-flashover/daemon.sh
+		start-stop-daemon "$args" --start /var/www-flashover/daemon.sh
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+esac
+exit 0
