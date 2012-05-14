@@ -147,13 +147,15 @@ class file_upload(base_json):
     def process(self):
         w = web.input(file = {})
         
-        if not is_flash_file(w.file.value):
+        value = w.file.file.read()
+        
+        if not is_flash_file(value):
             return json(dict(error = "Not a flash file.  Flash files must start with FWS or CWS.",
-                             size = len(w.file.value)))
+                             size = len(value)))
         
         job, jobdir = setup_job()
         with open(path.join(jobdir, config.inputfn), 'wb') as f:
-            f.write(w.file.value)
+            f.write(value)
         
         db.queue_job(job)
         return json(dict(job = str(job)))
