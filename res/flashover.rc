@@ -1,16 +1,18 @@
 
-args="--chuid www-data --group www-data --make-pidfile --pidfile /var/run/flashover.pid --exec /var/www-flashover/daemon.sh"
+args="--chuid www-data --group www-data --make-pidfile --pidfile /var/run/flashover.pid"
+start="--start --background --exec /var/www-flashover/daemon.sh"
+stop="--stop"
 
 case "$1" in
 	start)
-		start-stop-daemon $args --start --background
+		start-stop-daemon $args $start
 		;;
 	stop)
-		start-stop-daemon $args --stop
+		start-stop-daemon $args $stop
 		;;
 	restart)
-		start-stop-daemon $args --oknodo --stop
-		start-stop-daemon $args --start --background
+		start-stop-daemon $args --oknodo $stop
+		start-stop-daemon $args $start
 		;;
 	*)
 		echo "Usage: $0 {start|stop|restart}"
