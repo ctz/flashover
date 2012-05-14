@@ -1,6 +1,5 @@
-log="/var/www-flashover/flashover/res"
-run="/var/run"
-args="--chuid www-data --group www-data --make-pidfile --pidfile $run/flashover.pid --exec $loc/daemon.sh"
+
+args="--chuid www-data --group www-data --make-pidfile --pidfile /var/run/flashover.pid --exec /var/www-flashover/daemon.sh"
 
 case "$1" in
 	start)
