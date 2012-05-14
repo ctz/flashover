@@ -22,7 +22,8 @@ urls = (
     '/await/' + job_re, 'await',
     '/status/' + job_re, 'job_status',
     '/results/' + job_re, 'job_intro',
-    '/file-upload', 'file_upload',
+    '/file-upload-json', 'file_upload_json',
+    '/file-upload', 'file_upload_html',
     '/image/' + job_re + '/' + id_re, 'image_details',
     '/shape/' + job_re + '/' + id_re, 'shape_details',
     '/image-thumb/' + job_re + '/' + id_re + '/' + sz_re, 'image_thumb',
@@ -141,7 +142,7 @@ class start_fetch(base_html):
         db.queue_job(job, fetchurl = w.url)
         raise web.seeother('/await/' + str(job))
 
-class file_upload(base_json):
+class file_upload_base(object):
     methods = set(['POST'])
     
     def process(self):
@@ -150,15 +151,30 @@ class file_upload(base_json):
         value = w.file.file.read()
         
         if not is_flash_file(value):
-            return json(dict(error = "Not a flash file.  Flash files must start with FWS or CWS.",
-                             size = len(value)))
+            return False, "Not a flash file.  Flash files must start with FWS or CWS. File size was %d bytes." % len(value)
         
         job, jobdir = setup_job()
         with open(path.join(jobdir, config.inputfn), 'wb') as f:
             f.write(value)
         
         db.queue_job(job)
-        return json(dict(job = str(job)))
+        return True, str(job)
+
+class file_upload_json(file_upload_base, base_json):
+    def process(self):
+        worked, res = file_upload_base.process(self)
+        if worked:
+            return json(dict(job = str(res)))
+        else:
+            return json(dict(error = res))
+
+class file_upload_html(file_upload_base, base_html):
+    def process(self):
+        worked, res = file_upload_base.process(self)
+        if worked:
+            return render.await(res)
+        else:
+            raise ValueError, res
 
 class await(base_html):
     def process(self, job):

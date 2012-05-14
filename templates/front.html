@@ -25,6 +25,9 @@ $var title: online flash decompiler
     <h2>Upload</h2>
     <p>Choose a <code>.swf</code> file.</p>
     <p>
+      <form id="file-upload-json" method="POST" action="/file-upload-json" enctype="multipart/form-data" style="display: none">
+        <input type="file" name="file" />
+      </form>
       <form id="file-upload" method="POST" action="/file-upload" enctype="multipart/form-data" class="form-inline">
         <input type="file" name="file" /> (or just drag and drop)
         <input class="pull-right btn btn-flashover" type="submit" value="Go &rarr;" />
@@ -74,8 +77,8 @@ updateHash();
 
 $$(window).bind('hashchange', updateHash);
 
-$$('#file-upload').fileupload({
-  url: '/file-upload',
+$$('#file-upload-json').fileupload({
+  url: '/file-upload-json',
   paramName: 'file',
   singleFileUploads: true,
   fail: function(e, data) {
