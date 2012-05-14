@@ -151,7 +151,8 @@ class file_upload_base(object):
         value = w.file.file.read()
         
         if not is_flash_file(value):
-            return False, "Not a flash file.  Flash files must start with FWS or CWS. File size was %d bytes." % len(value)
+            import hashlib
+            return False, "Not a flash file.  Flash files must start with FWS or CWS. File size was %d bytes (hash %s)." % (len(value), hashlib.md5(value).hexdigest())
         
         job, jobdir = setup_job()
         with open(path.join(jobdir, config.inputfn), 'wb') as f:
