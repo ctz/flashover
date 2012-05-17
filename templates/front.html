@@ -15,12 +15,13 @@ $var title: online flash decompiler
   </div>
   <div class="span6 pull-right">
     <a href="#upload" class="btn btn-flashover btn-large btn-pad"><i class="icon-upload"></i> Upload</a>
+    <a href="#fetch" class="btn btn-flashover btn-large btn-pad"><i class="icon-download"></i> Fetch</a>
     <a href="#bookmarklet" class="btn btn-flashover btn-large btn-pad"><i class="icon-bookmark"></i> Bookmarklet</a>
-    <a href="tour" class="btn btn-flashover btn-large btn-pad"><i class="icon-road"></i> Tour</a>
+    <a href="tour" class="btn btn-flashover btn-large"><i class="icon-road"></i> Tour</a>
   </div>
 </div>
 
-<div class="row hideable" id="upload-block">
+<div class="row hideable" id="upload-block" style="display: none">
   <div class="well span8 pull-right">
     <h2>Upload</h2>
     <p>Choose a <code>.swf</code> file.</p>
@@ -37,7 +38,21 @@ $var title: online flash decompiler
   </div>
 </div>
 
-<div class="row hideable" id="upload-error">
+<div class="row hideable" id="fetch-block" style="display: none">
+  <div class="well span8 pull-right">
+    <h2>Fetch</h2>
+    <p>Fetch a <code>.swf</code> file from the web.</p>
+    <p>
+      <form id="file-fetch" method="GET" action="/bookmarklet-target" enctype="multipart/form-data">
+        <input type="text" class="span7" name="url" placeholder="http://" />
+        <input class="pull-right btn btn-flashover" type="submit" value="Go &rarr;" />
+      </form>
+    </p>
+        
+  </div>
+</div>
+
+<div class="row hideable" id="upload-error" style="display: none">
   <div class="span9 alert alert-error">
     <h4 class="alert-heading">Upload failed!</h4>
     <strong>Sorry</strong>, this is unexpectedly broken.  The error was:
@@ -45,11 +60,11 @@ $var title: online flash decompiler
   </div>
 </div>
 
-<div class="row hideable" id="bookmarklet-block">
+<div class="row hideable" id="bookmarklet-block" style="display: none">
   <div class="well span8 pull-right">
     <h2>Bookmarklet</h2>
     <p class="pull-center">
-      <a class="btn btn-flashover btn-large" href="javascript:void((function(){var%20e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('src','http://localhost:8080/static/bookmarklet.js');document.body.appendChild(e)})())">
+      <a class="btn btn-flashover btn-large" href="javascript:void((function(){var%20e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('src','http://flashover.ifihada.com/static/bookmarklet.js');document.body.appendChild(e)})())">
         Inspect with flashover
       </a>
     </p>
