@@ -51,7 +51,7 @@
         container.style.top = (pos.top + pos.height / 2 - sz / 2) + 'px';
         
         var button = document.createElement('a');
-        button.href = base + 'bookmarklet-target/?url=' + mu;
+        button.href = base + 'bookmarklet-target?url=' + mu;
         button.title = 'View with flashover';
         
         var img = document.createElement('img');
