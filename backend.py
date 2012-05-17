@@ -35,7 +35,7 @@ def process_one(job):
     try:
         meta = swfback.process_file(path.join(location, config.inputfn), location)
     except Exception, e:
-        emit_meta(location, dict(error = 'failed to process swf. error logged.'))
+        emit_meta(location, dict(error = 'Failed to process swf'))
         emit_exception(location)
         meta = dict()
     else:
@@ -44,13 +44,15 @@ def process_one(job):
     return meta
 
 def process_fetch(job, fetchurl):
+    outdir = path.join(config.outputdir, str(job))
     try:
         _, location = get_job_status(job)
         urllib.urlretrieve(fetchurl, path.join(location, config.inputfn))
         return True
     except Exception, e:
-        emit_meta(location, dict(error = 'failed to fetch swf. error logged.'))
+        emit_meta(location, dict(error = 'Failed to fetch swf'))
         emit_exception(location)
+        os.rename(location, outdir)
         return False
     
 def handle_queue_head(txn, job, fetchurl):
@@ -58,6 +60,7 @@ def handle_queue_head(txn, job, fetchurl):
         return
     if fetchurl is not None:
         if not process_fetch(job, fetchurl):
+            db.finish_job(job, dict(), swfback.produce_stats(dict()))
             return
     meta = process_one(job)
     db.finish_job(job, meta, swfback.produce_stats(meta))

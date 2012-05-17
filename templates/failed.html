@@ -2,7 +2,7 @@ $def with (error, job)
 $var title: overview
 
 <div class="content">
-  <h1>Ouch! <small>We failed to parse your file.</small></h1>
+  <h1>Ouch! <small>$error.</small></h1>
   <p>Please <a class="btn btn-danger" href="https://github.com/ctz/flashover/issues/new?body=${urlquote('Error from flashover backend:\n' + error + '\nJob:\n' + job)}"><i class="icon-white icon-warning-sign"></i> File a bug</a> to help us fix this.
   </p>
   <!--
