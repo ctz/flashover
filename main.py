@@ -5,6 +5,7 @@ import os.path as path
 from traceback import format_exc
 from shared import config, uuid, generate_uuid, get_job_status, get_meta, get_file_for_job, is_flash_file
 from db import db
+import urlparse
 import formatting
 import svgthumb
 import Image
@@ -41,7 +42,7 @@ urls = (
     '/timeline/' + job_re, 'job_timeline',
     '/log/' + job_re, 'log_raw',
     '/svg/' + job_re, 'svg_full_raw',
-    '/bookmarklet-target/', 'start_fetch',
+    '/bookmarklet-target', 'start_fetch',
 )
 app = web.application(urls, globals())
 
@@ -132,12 +133,26 @@ def setup_job():
     jobdir = path.join(config.inputdir, str(job))
     os.mkdir(jobdir, 0700)
     return job, jobdir
-                            
+
+def correct_url(s):
+    try:
+        url = urlparse.urlparse(s, 'http', allow_fragments = False)
+        if url.scheme != 'http':
+            return None
+        if '.' not in url.netloc:
+            return None
+        return urlparse.urlunparse(url)
+    except Exception, e:
+        return None
+
 class start_fetch(base_html):
     def process(self):
         w = web.input(url = None)
         if w.url is None:
             raise web.NotAcceptable('We need a URL parameter')
+        url = correct_url(w.url)
+        if url is None:
+            raise web.NotAcceptable('URL parameter is invalid')
         job, _ = setup_job()
         db.queue_job(job, fetchurl = w.url)
         raise web.seeother('/await/' + str(job))
