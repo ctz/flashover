@@ -4,7 +4,7 @@
  * Public domain.
  */
  (function() {
-    var base = 'http://localhost:8080/';
+    var base = 'http://flashover.ifihada.com/';
     var absoluteURL = function(url) {
         var escape = function(s) {
             return s.split('&').join('&amp;').split('<').join('&lt;').split('"').join('&quot;');
@@ -34,17 +34,7 @@
     
     var info = function(msg) {
         var container = document.createElement('div');
-        container.style.position = 'absolute';
-        container.style.width = '10%';
-        container.style.height = '50px';
-        container.style.zIndex = '100000';
-        container.style.left = '45%';
-        container.style.top = '0px';
-        container.style.borderBottomLeftRadius = '5px';
-        container.style.borderBottomRightRadius = '5px';
-        container.style.backgroundColor = '#e44d26';
-        container.style.fontSize = '20px';
-        container.style.color = 'white';
+        container.style.cssText = 'position: absolute; width: 30%; z-index: 100000; left: 35%; top: 0px; padding: 3px; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; background-color: #e44d26; font-face: sans-serif !important; font-size: 13px !important; color: white !important;';
         document.body.appendChild(container);
         container.innerHTML = msg;
     };

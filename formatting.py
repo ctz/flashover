@@ -66,6 +66,9 @@ def reason_list(l):
     for k in sorted(out.keys()):
         yield k, out[k]
 
+def serverhost():
+    return web.ctx.host
+
 exports = dict(
     filesize = filesize,
     duration = duration,
@@ -79,4 +82,5 @@ exports = dict(
     elements = elements,
     reason_list = reason_list,
     sorted = sorted,
+    serverhost = serverhost,
 )
