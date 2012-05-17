@@ -29,7 +29,7 @@ body {
 }
 
 .btn-pad {
-  margin-right: 50px;
+  margin-right: 20px;
 }
 
 .topbar .btn {
@@ -51,6 +51,10 @@ div.well * a.btn {
 
 input[type=file] {
   background-color: transparent !important;
+}
+
+input[type=text] {
+  background-color: white;
 }
 
 form.compact {
