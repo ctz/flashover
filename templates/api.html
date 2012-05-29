@@ -3,21 +3,238 @@ $var title: api
 
 <div class="content"> 
   <h2>Flashover API</h2>
-  <h3>Overview</h3>
+  <div class="well">
+  <h3>Contents</h3>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#submission">Submission</a>
+      <ul>
+        <li><a href="#upload">File upload</a></li>
+        <li><a href="#transload">Transloading</a></li>
+      </ul>
+    </li>
+    <li><a href="#polling">Polling</a></li>
+    <li><a href="#retrieve">Retrieving data</a>
+      <ul>
+        <li><a href="#metadata">Metadata</a></li>
+        <li><a href="#assets">Downloading assets</a></li>
+      </ul>
+    </li>
+  </ul>
+  </div>
+  
+  <h3><a name="overview"></a> Overview</h3>
   <p>A typical API use looks like:</p>
   <ol class="breadcrumb">
-    <li class="active">Submit SWF <span class="divider">&rarr;</span></li>
-    <li class="active">Receive UUID <span class="divider">&rarr;</span></li>
-    <li class="active">Poll for completion <span class="divider">&rarr;</span></li>
-    <li class="active">Retrieve data</li>
+    <li class="active"><a href="#submission">Submit SWF</a> <span class="divider">&rarr;</span></li>
+    <li class="active"><a href="#polling">Poll for completion</a> <span class="divider">&rarr;</span></li>
+    <li class="active"><a href="#retrieve">Retrieve data</a></li>
   </ol>
   <p>
   All requests are made over HTTP.  Responses are JSON for metadata,
   or binary for resources.  A UUID here identifies the result of decompiling
-  your submitted SWF.  They are allocated by flashover, and become invalid after two hours.
+  your submitted SWF (a `job').  They are allocated by flashover, and become invalid after two hours.
   </p>
   
-  <p>
-  TODO
-  </p>
+  <h3><a name="submission"></a> Submission</h3>
+  <h4><a name="upload"></a> File upload</h4>
+  <p>Flashover accepts uploads of SWF movies for processing.  You can opt for either a JSON response
+  or HTML response.</p>
+  
+  <dl class="apidef">
+    <h5>File upload with HTML/HTTP response</h5>
+    <dt>Path</dt><dd><tt>/file-upload</tt></dd>
+    <dt>Method</dt><dd>POST</dd>
+    <dt>Parameters</dt><dd><tt>file={swf-binary}</tt></dd>
+    <dt>Response</dt><dd>303 See Other to <tt>/await/{uuid}</tt>, or an error.</dd>
+  </dl>
+  
+  <dl class="apidef">
+    <h5>File upload with JSON response</h5>
+    <dt>Path</dt><dd><tt>/file-upload-json</tt></dd>
+    <dt>Method</dt><dd>POST</dd>
+    <dt>Parameters</dt><dd><tt>file={swf-binary}</tt></dd>
+    <dt>Response</dt><dd>JSON: <tt>{"job":"{uuid}"}</tt> or <tt>{"error":"{error}"}</tt> on error.</dd>
+  </dl>
+  
+  
+  <h4><a name="transload"></a> Transloading</h4>
+  <p>Flashover can download a SWF movie from a URL on your behalf.</p>
+  
+  <dl class="apidef">
+    <h5>File transload with HTML/HTTP response</h5>
+    <dt>Path</dt><dd><tt>/file-fetch</tt></dd>
+    <dt>Method</dt><dd>GET</dd>
+    <dt>Parameters</dt><dd><tt>url=http://example.com/movie.swf</tt></dd>
+    <dt>Response</dt><dd>303 See Other to <tt>/await/{uuid}</tt>, or an error.</dd>
+  </dl>
+  
+  <h3><a name="polling"></a> Polling</h3>
+  <p>You should periodically (not more than once every second) check whether your job is finished.  This call also returns details of where your job is in the processing queue.</p>
+  
+  <p>This response is JSON.</p>
+  
+  <dl class="apidef">
+    <h5>Query job status</h5>
+    <dt>Path</dt><dd><tt>/status/{uuid}</tt></dd>
+    <dt>Method</dt><dd>GET</dd>
+    <dt>Parameters</dt><dd>None</dd>
+    <dt>Response</dt><dd>On completion: <tt>{"status":"ready"}</tt></dd>
+    <dd>On error: <tt>{"status":"unknown"}</tt></dd>
+    <dd>On error: <tt>{"status":"awaiting","position":K,"queue":N}</tt> indicating you are <tt>K</tt> in a queue of <tt>N</tt>.</dd>
+  </dl>
+  
+  <h3><a name="retrieve"></a> Retrieving data</h3>
+  <h4><a name="metadata"></a> Metadata</h4>
+  <p>Top level meta-data describes the assets extracted from your submitted movie.  This is a JSON structure.</p>
+  
+  <dl class="apidef">
+    <h5>Fetch JSON metadata</h5>
+    <dt>Path</dt><dd><tt>/results-json/{uuid}</tt></dd>
+    <dt>Method</dt><dd>GET</dd>
+    <dt>Parameters</dt><dd>None</dd>
+    <dt>Response</dt><dd>JSON. See next section.</dd>
+  </dl>
+  
+  <h5>Top-level structure</h5>
+  <p>At the top level, the data returned by <tt>/results-json</tt> has two items:
+  <tt>status</tt> (which tells you how things went) and <tt>meta</tt>
+  (which tells you about the contents of the movie).</p>
+  
+  <p><tt>status</tt> will always be the string <tt>success</tt>.  <tt>meta</tt>
+  is a further JSON object with the following items:</p>
+  
+  <dl class="structdef">
+    <h5>SWF contents description</h5>
+    <dt>filesize</dt><dd>size in bytes of the SWF</dd>
+    <dt>parse_time</dt><dd>wall time in seconds taken to parse and extract the assets from the SWF</dd>
+    <dt>metadata</dt><dd><a href="#metadatadesc">miscellaneous metadata</a> about the SWF file</dd>
+    <dt>sounds</dt><dd>list of JSON encodings, one per sound in the SWF</dd>
+    <dt>images</dt><dd>list of JSON encodings, one per image in the SWF</dd>
+    <dt>binaries</dt><dd>list of JSON encodings, one per binary in the SWF</dd>
+    <dt>shapes</dt><dd>list of JSON encodings, one per shape in the SWF (nb. a 'shape' here is a SWF concept, it is a vector graphic possibly containing references to bitmap images)</dd>
+  </dl>
+  
+  <p>All assets are described with two-element lists: <tt>[id, description]</tt> where <tt>id</tt> is an integer ID used within the SWF file, and <tt>description</tt> depends on the type of the asset: 
+  <a href="#sounddesc">sound</a>, <a href="#imagedesc">image</a>, <a href="#binarydesc">binary</a>, <a href="#shapedesc">shape</a>.</p>
+    
+  <h5><a name="sounddesc"></a> Sound</h5>
+  <dl class="structdef">
+    <h5>SWF extracted sound description</h5>
+    <dt>status</dt><dd>the string 'extracted'</dd>
+    <dt>kind</dt><dd>the string 'sound' or 'soundstream'</dd>
+    <dt>id</dt><dd>the id again</dd>
+    <dt>filesize</dt><dd>size in bytes of the extracted file</dd>
+    <dt>mimetype</dt><dd>a guessed mimetype of the file</dd>
+    <dt>codec</dt><dd>a string describing the type of file (eg, 'MP3')</dd>
+    <dt>(others)</dt><dd>depending on the codec, a detailed description of the encoding.</dd>
+  </dl>
+  
+  <p>If the sound format is not supported, the description is instead:</p>
+  
+  <dl class="structdef">
+    <h5>SWF skipped sound description</h5>
+    <dt>status</dt><dd>the string 'skipped'</dd>
+    <dt>kind</dt><dd>the string 'sound' or 'soundstream'</dd>
+    <dt>id</dt><dd>the id again</dd>
+    <dt>reason</dt><dd>an English explanation of why this sound was skipped during extraction</dd>
+    <dt>codec</dt><dd>a string describing the type of file (eg, 'MP3')</dd>
+  </dl>
+  
+  <h5><a name="imagedesc"></a> Image</h5>  
+  <dl class="structdef">
+    <h5>SWF extracted image description</h5>
+    <dt>status</dt><dd>the string 'extracted'</dd>
+    <dt>extract</dt><dd>a string describing any changes to the images in extraction (eg. reattachment of alpha to JPEGs)</dd>
+    <dt>id</dt><dd>the id again</dd>
+    <dt>filesize</dt><dd>size in bytes of the extracted file</dd>
+    <dt>original_type</dt><dd>a string describing the original type of the image within the SWF (eg. 'JPEG' or 'PNG)</dd>
+    <dt>effective_type</dt><dd>a string describing the final type of the image as extracted (sometimes flashover will convert JPEGs to PNGs to reattach an alpha channel.</dd>
+    <dt>img_mode</dt><dd>string describing the pixel format of the image (eg. RGB, RGBA)</dd>
+    <dt>img_dims</dt><dd>the <tt>[x, y]</tt> pixel dimensions</dd>
+  </dl>
+  
+  <h5><a name="binarydesc"></a> Binary</h5>
+  <dl class="structdef">
+    <h5>SWF binary description</h5>
+    <dt>status</dt><dd>the string 'extracted'</dd>
+    <dt>id</dt><dd>the id again</dd>
+    <dt>filesize</dt><dd>size in bytes of the extracted file</dd>
+    <dt>type</dt><dd>type of the binary (guessed from content), or 'Unknown'</dd>
+    <dt>mimetype</dt><dd>mimetype of the binary (guessed from content), or 'application/octet-stream'</dd>
+  </dl>
+  
+  <h5><a name="shapedesc"></a> Shape</h5>
+  <dl class="structdef">
+    <h5>SWF shapes description</h5>
+    <dt>status</dt><dd>the string 'converted'</dd>
+    <dt>id</dt><dd>the id again</dd>
+    <dt>filesize</dt><dd>size in bytes of the extracted file</dd>
+  </dl>
+  
+  <h4><a name="metadatadesc"></a> Movie metadata</h4>
+  <p>This structure is currently undocumented.  Please see <a href="https://github.com/ctz/flashover/blob/master/templates/metadata.html">the metadata template</a> for the expected contents.</p>
+  
+  <h4><a name="assets"></a> Downloading assets</h4>
+  <h5>Shapes</h5>
+  <dl class="apidef">
+    <h5>Fetch shape as SVG</h5>
+    <dt>Path</dt><dd><tt>/image-svg/{uuid}/{id}</tt></dd>
+    <dt>Method</dt><dd>GET</dd>
+    <dt>Parameters</dt><dd>None</dd>
+    <dt>Response</dt><dd><tt>image/svg+xml</tt> SVG</dd>
+  </dl>
+  
+  <dl class="apidef">
+    <h5>Fetch shape as SVG (thumbnail version)</h5>
+    <dt>Path</dt><dd><tt>/image-thumb-svg/{uuid}/{id}/{size}</tt></dd>
+    <dt>Method</dt><dd>GET</dd>
+    <dt>Parameters</dt><dd><tt>{size}</tt> is the largest dimension of the image in pixels</dd>
+    <dt>Response</dt><dd><tt>image/svg+xml</tt> SVG</dd>
+  </dl>
+  
+  <h5>Images</h5>
+  <dl class="apidef">
+    <h5>Fetch image</h5>
+    <dt>Path</dt><dd><tt>/image-raw/{uuid}/{id}</tt></dd>
+    <dt>Method</dt><dd>GET</dd>
+    <dt>Parameters</dt><dd>None</dd>
+    <dt>Response</dt><dd>Image with appropriate mimetype</dd>
+  </dl>
+  
+  <dl class="apidef">
+    <h5>Fetch image (thumbnail version)</h5>
+    <dt>Path</dt><dd><tt>/image-thumb/{uuid}/{id}/{size}</tt></dd>
+    <dt>Method</dt><dd>GET</dd>
+    <dt>Parameters</dt><dd><tt>{size}</tt> is the largest dimension of the image in pixels</dd>
+    <dt>Response</dt><dd>Image with appropriate mimetype</dd>
+  </dl>
+  
+  <h5>Binaries</h5>
+  <dl class="apidef">
+    <h5>Fetch binary</h5>
+    <dt>Path</dt><dd><tt>/bin-raw/{uuid}/{id}</tt></dd>
+    <dt>Method</dt><dd>GET</dd>
+    <dt>Parameters</dt><dd>None</dd>
+    <dt>Response</dt><dd>Binary with appropriate mimetype</dd>
+  </dl>
+  
+  <h5>Sound</h5>
+  <dl class="apidef">
+    <h5>Fetch sound</h5>
+    <dt>Path</dt><dd><tt>/sound-raw/{uuid}/{id}</tt></dd>
+    <dt>Method</dt><dd>GET</dd>
+    <dt>Parameters</dt><dd>None</dd>
+    <dt>Response</dt><dd>Sound with appropriate mimetype</dd>
+  </dl>
+ 
+  <h5>Input file</h5>
+  <dl class="apidef">
+    <h5>Fetch input SWF file</h5>
+    <dt>Path</dt><dd><tt>/input-file/{uuid}</tt></dd>
+    <dt>Method</dt><dd>GET</dd>
+    <dt>Parameters</dt><dd>None</dd>
+    <dt>Response</dt><dd><tt>application/x-shockwave-flash</tt> SWF file</dd>
+  </dl>
+  
 </div>

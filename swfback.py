@@ -11,6 +11,7 @@ import swf.movie, swf.consts, swf.tag, swf.sound
 import Image
 import sndhdr
 import mp3hdr
+import swfmeta
 
 def output_with_alpha(img, outf):
     if hasattr(img, 'bitmapAlphaData'):
@@ -116,7 +117,7 @@ def emit_stream(streams, stream, outdir):
                               kind = 'soundstream',
                               filesize = path.getsize(path.join(outdir, filename)),
                               mimetype = swf.consts.AudioCodec.MimeTypes[stream[0].soundFormat],
-                              type = swf.consts.AudioCodec.tostring(stream[0].soundFormat),
+                              codec = swf.consts.AudioCodec.tostring(stream[0].soundFormat),
                               filename = filename,
                               **get_sound_meta(path.join(outdir, filename)))
         elif swf.sound.junk(stream):
@@ -143,7 +144,7 @@ def emit_sound(sounds, sound, outdir):
                              kind = 'sound',
                              filesize = path.getsize(path.join(outdir, filename)),
                              mimetype = swf.consts.AudioCodec.MimeTypes[sound.soundFormat],
-                             type = swf.consts.AudioCodec.tostring(sound.soundFormat),
+                             codec = swf.consts.AudioCodec.tostring(sound.soundFormat),
                              filename = filename,
                              **get_sound_meta(path.join(outdir, filename)))
         elif swf.sound.junk(sound):
@@ -265,6 +266,5 @@ def process_file(input, outdir):
                 images = images.items(),
                 binaries = binaries.items(),
                 shapes = shapes.items(),
-                log = 'log.txt',
-                input = config.inputfn,
+                metadata = swfmeta.extract_metadata(m),
                 )

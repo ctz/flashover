@@ -16,33 +16,51 @@ id_re = '(\d+)'
 sz_re = '(\d+)'
 
 urls = (
+    # top-level
     '/(home)?', 'front',
     '/about', 'about',
     '/api', 'api',
     '/stats', 'stats',
+    '/tour', 'tour',
+    
+    # submission
+    '/file-upload-json', 'file_upload_json',
+    '/file-upload', 'file_upload_html',
+    '/bookmarklet-target', 'start_fetch',
+    '/file-fetch', 'start_fetch',
+    
+    # usage flow
     '/await/' + job_re, 'await',
     '/status/' + job_re, 'job_status',
     '/results/' + job_re, 'job_intro',
-    '/file-upload-json', 'file_upload_json',
-    '/file-upload', 'file_upload_html',
-    '/image/' + job_re + '/' + id_re, 'image_details',
-    '/shape/' + job_re + '/' + id_re, 'shape_details',
-    '/image-thumb/' + job_re + '/' + id_re + '/' + sz_re, 'image_thumb',
-    '/image-thumb-svg/' + job_re + '/' + id_re + '/' + sz_re, 'svg_thumb',
+    '/results-json/' + job_re, 'job_intro_json',
+    
+    # fetching assets
     '/image-svg/' + job_re + '/' + id_re, 'svg_raw',
+    '/image-thumb-svg/' + job_re + '/' + id_re + '/' + sz_re, 'svg_thumb',
+    
     '/image-raw/' + job_re + '/' + id_re, 'image_raw',
+    '/image-thumb/' + job_re + '/' + id_re + '/' + sz_re, 'image_thumb',
+    
     '/bin-raw/' + job_re + '/' + id_re, 'bin_raw',
     '/sound-raw/' + job_re + '/' + id_re, 'sound_raw',
     '/input-file/' + job_re, 'input_file_raw',
+    
+    # web frontend
     '/shapes/' + job_re, 'job_shapes',
+    '/shape/' + job_re + '/' + id_re, 'shape_details',
+    
     '/images/' + job_re, 'job_images',
+    '/image/' + job_re + '/' + id_re, 'image_details',
+    
     '/sounds/' + job_re, 'job_sounds',
     '/binaries/' + job_re, 'job_binaries',
     '/metadata/' + job_re, 'job_metadata',
     '/timeline/' + job_re, 'job_timeline',
+    
+    # debug
     '/log/' + job_re, 'log_raw',
     '/svg/' + job_re, 'svg_full_raw',
-    '/bookmarklet-target', 'start_fetch',
 )
 app = web.application(urls, globals())
 
@@ -121,6 +139,10 @@ class about(base_html):
 class api(base_html):
     def process(self):
         return render.api()
+
+class tour(base_html):
+    def process(self):
+        return render.tour()
 
 class stats(base_html):
     def process(self):
@@ -208,18 +230,23 @@ class job_status(base_json):
         else:
             return json(dict(status = status))
 
+class job_intro_json(base_json):
+    def process(self, job):
+        web.header('Content-Type', 'text/json')
+        job = str(uuid(job))
+        return json(get_meta(job))
+
 class job_base(base_html):
     WHERE = None
     
     def process(self, job):
         job = uuid(job)
-        status, location = get_job_status(job)
         meta = get_meta(job)
         if 'error' in meta:
             return render.failed(meta['error'], str(job))
         else:
             stats = db.get_completed(job)
-            sidebar = part_render.part_sidebar(current = self.WHERE, job = job, status = status, meta = meta['meta'], stats = stats)
+            sidebar = part_render.part_sidebar(current = self.WHERE, job = job, meta = meta['meta'], stats = stats)
             args = self.get_template_args(job, meta)
             return getattr(render, self.WHERE)(sidebar = sidebar, job = job, **args)
     
@@ -232,13 +259,12 @@ class job_item_base(base_html):
     def process(self, job, id):
         job = uuid(job)
         id = int(id)
-        status, location = get_job_status(job)
         meta = get_meta(job)
         stats = db.get_completed(job)
         if 'error' in meta:
             return render.failed(meta['error'], str(job))
         itemmeta = self.get_template_args(job, meta, id)
-        sidebar = part_render.part_sidebar(current = self.WHERE, job = job, status = status, meta = meta['meta'], stats = stats)
+        sidebar = part_render.part_sidebar(current = self.WHERE, job = job, meta = meta['meta'], stats = stats)
         return getattr(render, self.WHERE + '_details')(sidebar = sidebar, job = job, **itemmeta)
     
     def get_template_args(self, job, meta, id):
@@ -263,18 +289,12 @@ class job_binaries(job_base):
 class job_metadata(job_base):
     WHERE = 'metadata'
     def get_template_args(self, job, meta):
-        import swfmeta
-        reload(swfmeta)
-        md = swfmeta.wrapper_metadata(get_file_for_job(job, config.inputfn))
-        return dict(metadata = md)
+        return dict(metadata = meta['meta']['metadata'])
 
 class job_timeline(job_base):
     WHERE = 'timeline'
     def get_template_args(self, job, meta):
-        import swfmeta
-        reload(swfmeta)
-        tl = swfmeta.wrapper_timeline(get_file_for_job(job, config.inputfn))
-        return dict(timeline = tl)
+        return dict(timeline = meta['meta']['timeline'])
 
 class image_details(job_item_base):
     WHERE = 'images'
@@ -349,7 +369,7 @@ class log_raw(base_image):
 
 class input_file_raw(base_image):
     def process(self, job):
-        return serve_binary(job, lambda meta: meta['input'], mimetype = 'application/x-shockwave-flash')
+        return serve_binary(job, lambda meta: config.inputfn, mimetype = 'application/x-shockwave-flash')
     
 if __name__ == '__main__':
     if os.name == 'nt':
