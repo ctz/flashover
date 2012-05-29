@@ -51,7 +51,7 @@ def get_script_limits(m):
 def get_debug_id(m):
     for t in m.all_tags_of_type(swf.tag.TagDebugID):
         return dict(
-            dbg_guid = t.guid
+            dbg_guid = t.guid.encode('hex')
         )
     return dict()
 

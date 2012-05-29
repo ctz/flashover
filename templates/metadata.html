@@ -16,8 +16,6 @@ $def value(key, val, unit = ''):
 
 $def value_str(title, val, unit = ''):
   $:value(title, metadata.get(val, 'n/a'), unit)
-$def value_hex(title, val):
-  $:value(title, metadata.get(val, '').encode('hex'))
 $def value_pre(title, val):
   $:value(title, '<pre>' + metadata.get(val, 'n/a') + '</pre>')
 $def value_bool(title, val):
@@ -62,13 +60,13 @@ $def value_color(title, val):
       $:title('Debugging and DRM')
       $:start()
       $if 'dbg_guid' in metadata:
-        $:value_hex('Debug UUID', 'dbg_guid')
+        $:value_pre('Debug UUID', 'dbg_guid')
       $:value_bool('Protected?', 'dbg_protected')
       $if metadata['dbg_protected']:
-        $:value_str('Edit password hash', 'dbg_protect_password')
+        $:value_pre('Edit password hash', 'dbg_protect_password')
       $:value_bool('Debuggable?', 'dbg_debuggable')
       $if metadata['dbg_debuggable']:
-        $:value_str('Debug password hash', 'dbg_debug_password')
+        $:value_pre('Debug password hash', 'dbg_debug_password')
       $:end()
       
       $:title('Attributes')
