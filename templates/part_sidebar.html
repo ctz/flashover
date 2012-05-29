@@ -1,4 +1,4 @@
-$def with (current, job, status, meta, stats)
+$def with (current, job, meta, stats)
 
 $def plain_link(icon, name):
   <i class="icon-$icon"></i> $name
@@ -58,7 +58,7 @@ $def nav_entry_meta(content, key):
     <li class="nav-header">
       Structure
     </li>
-    $:nav_entry(plain_link('forward', 'Timeline'), 'timeline')
+    $#:nav_entry(plain_link('forward', 'Timeline'), 'timeline')
     $#:nav_entry(plain_link('list', 'Scripts'), 'scripts')
     $:nav_entry(plain_link('tags', 'Metadata'), 'metadata')
     
