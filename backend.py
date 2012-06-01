@@ -9,6 +9,7 @@ import os
 import shutil
 import sys
 import time
+import optparse
 
 import swfback
 import urllib
@@ -89,11 +90,13 @@ def check_clean():
         clean(job)
         db.set_cleaned(job)
 
-if __name__ == '__main__':
-    PIDFILE = 'backend.pid'
+if __name__ == '__main__':    
+    op = optparse.OptionParser()
+    op.add_option('-p', '--pidfile', help = 'write PID to PIDFILE', default = './flashover.pid')
+    options, args = op.parse_args()
     
     try:
-        with open(PIDFILE, 'w') as f:
+        with open(options.pidfile, 'w') as f:
             print >>f, os.getpid()
         while True:
             check_queue()
@@ -101,6 +104,6 @@ if __name__ == '__main__':
             time.sleep(2)
     finally:
         try:
-            os.unlink(PIDFILE)
+            os.unlink(options.pidfile)
         except:
             pass
