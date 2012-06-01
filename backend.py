@@ -90,7 +90,17 @@ def check_clean():
         db.set_cleaned(job)
 
 if __name__ == '__main__':
-    while True:
-        check_queue()
-        check_clean()
-        time.sleep(2)
+    PIDFILE = 'backend.pid'
+    
+    try:
+        with open(PIDFILE, 'w') as f:
+            print >>f, os.getpid()
+        while True:
+            check_queue()
+            check_clean()
+            time.sleep(2)
+    finally:
+        try:
+            os.unlink(PIDFILE)
+        except:
+            pass
