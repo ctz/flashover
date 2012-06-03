@@ -31,11 +31,9 @@ $def with (content)
     <!-- Le fav and touch icons -->
     <link rel="shortcut icon" href="/static/favicon.png">
     <link rel="apple-touch-icon" href="/static/touch-icon.png">
-    
     <script type="text/javascript">
       var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', 'UA-28957171-1']);
-      _gaq.push(['_setDomainName', 'ifihada.com']);
+      _gaq.push(['_setAccount', 'UA-28957171-2']);
       _gaq.push(['_trackPageview']);
 
       (function() {
@@ -60,16 +58,16 @@ $def with (content)
               class="active"
             ><a href="/home"><i class="icon-white icon-home"></i> Home</a></li>
             <li
-            $if content.title == 'api':
-              class="active"
-            ><a href="/api"><i class="icon-white icon-cog"></i> API</a></li>
-            <li
             $if content.title == 'tour':
               class="active"
             ><a href="/tour"><i class="icon-white icon-road"></i> Tour</a></li>
           </ul>
           <ul class="nav pull-right">
             <li><a href="https://github.com/ctz/flashover"><i class="icon-white icon-retweet"></i> Github</a></li>
+            <li
+            $if content.title == 'api':
+              class="active"
+            ><a href="/api"><i class="icon-white icon-cog"></i> API</a></li>
             <li
             $if content.title == 'stats':
               class="active"
