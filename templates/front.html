@@ -56,14 +56,12 @@ $var title: online flash decompiler
   </div>
 </div>
  
-<div class="hideable" id="upload-progress" style="display: none">
-  <div class="alert alert-success pull-center">
-    <h2 class="alert-heading">Upload in progress</h2>
-    <div class="progress progress-striped active">
-      <div class="bar" id="upload-progress-bar" style="width: 0%"></div>
-    </div>
-    <div id="upload-progress-detail">0%</div>
+<div id="upload-progress" style="display: none" class="alert alert-success pull-center">
+  <h2 class="alert-heading">Uploading...</h2>
+  <div class="progress progress-striped active" style="margin-top: 20px; margin-left: 20px; height: 20px">
+    <div class="bar" id="upload-progress-bar" style="width: 0%"></div>
   </div>
+  <h2 id="upload-progress-detail" class="alert-heading">0%</h2>
 </div>
 
 <div class="row hideable" id="bookmarklet-block" style="display: none">
