@@ -35,7 +35,7 @@ $code:
                 <a href="/sound-raw/$job/${id}" class="btn btn-large btn-flashover" title="download"><i class="icon-download"></i></a>
               </td>
               <td>
-                $if s['type'] == 'MP3':
+                $if s['codec'] == 'MP3':
                   <span class="label label-info" title="encoding">${s['version']} ${s['layer']}</span>
                   <span class="label" title="sample rate">${s['samplerate']} KHz</span>
                   <span class="label" title="MPEG bitrate">${int(s['bitrate'])} kbps</span>

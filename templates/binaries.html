@@ -16,7 +16,7 @@ $var title: binaries
           </tr>
         </thead>
           
-        $for s in meta['binaries']:
+        $for k, s in meta['binaries']:
           <tr>
             <td>
               <a href="/bin-raw/$job/${s['id']}" class="btn btn-large btn-flashover" title="download"><i class="icon-download"></i></a>
