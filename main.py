@@ -15,8 +15,8 @@ job_re = '([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})'
 id_re = '(\d+)'
 sz_re = '(\d+)'
 alias_re = '([^/]+)'
-action_re = '([^/]+)'
-remainder_re = '(.*)'
+action_re = '([^\|]+)'
+remainder_re = '\|?(.*)'
 
 urls = (
     # top-level
@@ -35,7 +35,7 @@ urls = (
     # usage flow
     '/await/' + job_re, 'await',
     '/status/' + job_re, 'job_status',
-    '/alias/' + alias_re + '/' + action_re + '/?' + remainder_re, 'job_dealias',
+    '/alias/' + alias_re + '/' + action_re + remainder_re, 'job_dealias',
     '/results/' + job_re, 'job_intro',
     '/results-json/' + job_re, 'job_intro_json',
     
