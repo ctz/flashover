@@ -67,7 +67,7 @@ $def nav_entry_meta(content, key):
     <li><a href="/input-file/$job"><i class="icon-download-alt"></i> Download SWF</a></li>
     <li><span class="disabled" title="input file size"><i class="icon-resize-full"></i> $filesize(meta['filesize'])</span></li>
     <li><span class="disabled" title="processing time"><i class="icon-time"></i> $duration(meta['parse_time'])</span></li>
-    <li><span class="disabled" title="time until deletion"><i class="icon-trash"></i> $duration(stats['timestamp'] + 60 * 60 - time_now)</span></li>
+    <li><span class="disabled" title="time until deletion"><i class="icon-trash"></i> $duration(stats['expires'] - time_now)</span></li>
     
   </ul>
 </div>

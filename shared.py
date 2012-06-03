@@ -33,3 +33,9 @@ def get_file_for_job(job, fn):
 def is_flash_file(content):
     magic = content[0:3]
     return magic in ('FWS', 'CWS')
+
+def setup_job():
+    job = generate_uuid()
+    jobdir = path.join(config.inputdir, str(job))
+    os.mkdir(jobdir, 0700)
+    return job, jobdir

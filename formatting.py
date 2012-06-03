@@ -27,6 +27,8 @@ def filesize(fs):
     return base_reduce(float(fs), 1024.0, [' bytes'] + 'KB MB GB TB'.split())
 
 def duration(secs):
+    if secs > 60 * 60 * 24:
+        return 'a long time'
     if secs < 0:
         return duration(-secs) + ' ago'
     return base_reduce(float(secs) * 1e9, [1000, 1000, 1000, 60, 60, 24], duration_units)

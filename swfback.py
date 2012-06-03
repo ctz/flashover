@@ -106,7 +106,10 @@ def get_binary_meta(bb):
     return dict(type = 'Unknown', mimetype = 'application/octet-stream')
 
 def emit_stream(streams, stream, outdir):
-    i = max(streams.keys()) + 1 # streams are unnumbered
+    if streams:
+        i = max(streams.keys()) + 1 # streams are unnumbered
+    else:
+        i = 0xffff
     try:
         if swf.sound.supported(stream):
             filename = 'soundstream-%d%s' % (i, swf.consts.AudioCodec.FileExtensions[stream[0].soundFormat])

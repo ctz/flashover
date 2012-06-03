@@ -3,7 +3,7 @@ import json
 import os
 import os.path as path
 from traceback import format_exc
-from shared import config, uuid, generate_uuid, get_job_status, get_meta, get_file_for_job, is_flash_file
+from shared import config, uuid, get_job_status, get_meta, get_file_for_job, is_flash_file, setup_job
 from db import db
 import urlparse
 import formatting
@@ -14,6 +14,9 @@ from StringIO import StringIO
 job_re = '([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})'
 id_re = '(\d+)'
 sz_re = '(\d+)'
+alias_re = '([^/]+)'
+action_re = '([^/]+)'
+remainder_re = '(.*)'
 
 urls = (
     # top-level
@@ -32,6 +35,7 @@ urls = (
     # usage flow
     '/await/' + job_re, 'await',
     '/status/' + job_re, 'job_status',
+    '/alias/' + alias_re + '/' + action_re + '/?' + remainder_re, 'job_dealias',
     '/results/' + job_re, 'job_intro',
     '/results-json/' + job_re, 'job_intro_json',
     
@@ -150,12 +154,6 @@ class stats(base_html):
                             stats2hr = db.get_stats_2hr(),
                             statsall = db.get_stats())
 
-def setup_job():
-    job = generate_uuid()
-    jobdir = path.join(config.inputdir, str(job))
-    os.mkdir(jobdir, 0700)
-    return job, jobdir
-
 def correct_url(s):
     try:
         url = urlparse.urlparse(s, 'http', allow_fragments = False)
@@ -229,6 +227,13 @@ class job_status(base_json):
             return json(dict(status = status, **db.queue_position(job)))
         else:
             return json(dict(status = status))
+
+class job_dealias(base_html):
+    def process(self, alias, which, extra = ''):
+        job = db.dealias(alias)
+        if job is None:
+            raise web.NotFound()
+        raise web.seeother('/%s/%s%s' % (which, job, extra))
 
 class job_intro_json(base_json):
     def process(self, job):
