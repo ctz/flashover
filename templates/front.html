@@ -24,14 +24,10 @@ $var title: online flash decompiler
 <div class="row hideable" id="upload-block" style="display: none">
   <div class="well span8 pull-right">
     <h2>Upload</h2>
-    <p>Choose a <code>.swf</code> file.</p>
     <p>
+      Just drag and drop to this page.
       <form id="file-upload-json" method="POST" action="/file-upload-json" enctype="multipart/form-data" style="display: none">
         <input type="file" name="file" />
-      </form>
-      <form id="file-upload" method="POST" action="/file-upload" enctype="multipart/form-data" class="form-inline">
-        <input type="file" name="file" /> (or just drag and drop)
-        <input class="pull-right btn btn-flashover" type="submit" value="Go &rarr;" />
       </form>
     </p>
         
@@ -127,4 +123,5 @@ $$('#file-upload-json').fileupload({
     $$('#upload-progress').show();
   },
 });
+
 </script>
