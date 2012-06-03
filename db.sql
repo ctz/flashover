@@ -18,8 +18,10 @@ CREATE TABLE `completed` (
   `cputime` float NOT NULL,
   `waittime` int(11) NOT NULL,
   `timestamp` int(11) NOT NULL,
+  `expires` int(11) NOT NULL,
   `user` int(11) NOT NULL,
   `cleaned` tinyint(4) NOT NULL,
+  `alias` varchar(45) NOT NULL,
   PRIMARY KEY (`guid`),
   UNIQUE KEY `guid_UNIQUE` (`guid`),
   KEY `userid` (`user`)
@@ -51,5 +53,3 @@ CREATE TABLE `user` (
   `send_email` int(11) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8$$
-
-

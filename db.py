@@ -2,8 +2,16 @@ import web
 from config import db_db, db_user, db_pass
 import time
 
+JOB_LIFETIME = 2
+
+def now():
+    return int(time.time())
 def hours_ago(n):
-    return time.time() - (n * 60 * 60)
+    return now() - (n * 60 * 60)
+def hours_hence(n):
+    return hours_ago(-n)
+def years_hence(n):
+    return hours_hence(365 * 24 * n)
 
 class dba(object):
     QUEUE_ORDERING = 'priority DESC, timestamp ASC'
@@ -31,7 +39,7 @@ class dba(object):
     def queue_job(self, job, uid = 0, priority = 100, fetchurl = None):
         self.conn.insert('incoming',
                          guid = str(job),
-                         timestamp = time.time(),
+                         timestamp = now(),
                          priority = priority,
                          user = uid,
                          fetchurl = fetchurl)
@@ -47,8 +55,10 @@ class dba(object):
                          guid = found['guid'],
                          cleaned = 0,
                          user = found['user'],
-                         timestamp = int(time.time()),
-                         waittime = int(time.time() - found['timestamp']),
+                         timestamp = now(),
+                         expires = hours_hence(JOB_LIFETIME),
+                         waittime = int(now() - found['timestamp']),
+                         alias = '',
                          **stats)
     
     def get_completed(self, job):
@@ -89,10 +99,28 @@ class dba(object):
         return self.get_stats(cutoff = hours_ago(2))
     
     def get_cleanable(self):
-        rows = self.conn.select('completed', where = 'cleaned = 0 and timestamp < $cutoff', what = 'guid', vars = dict(cutoff = hours_ago(2)))
+        rows = self.conn.select('completed', where = 'cleaned = 0 and expires < $cutoff', what = 'guid', vars = dict(cutoff = now()))
         return [j['guid'] for j in rows]
         
     def set_cleaned(self, job):
         self.conn.update('completed', where = 'guid = $guid', cleaned = 1, vars = dict(guid = str(job)))
+    
+    def dealias(self, alias):
+        rows = self.conn.select('completed', where = 'alias = $alias', what = 'guid', vars = dict(alias = alias))
+        rows = list(rows)
+        if len(rows):
+            return rows[0]['guid']
+        else:
+            return None
+    
+    def expire_alias(self, alias):
+        assert len(alias) != 0
+        self.conn.update('completed', where = 'alias = $alias', expires = now(), alias = '', vars = dict(alias = alias))
+    
+    def set_alias(self, alias, job):
+        self.conn.update('completed', where = 'guid = $guid', alias = alias, vars = dict(guid = str(job)))
+        
+    def never_expire(self, job):
+        self.conn.update('completed', where = 'guid = $guid', expires = years_hence(10), vars = dict(guid = str(job)))
     
 db = dba()
