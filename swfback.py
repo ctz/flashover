@@ -13,6 +13,9 @@ import sndhdr
 import mp3hdr
 import swfmeta
 
+# whether to write a huge log.txt in output directory
+WRITE_LOG = False
+
 def output_with_alpha(img, outf):
     if hasattr(img, 'bitmapAlphaData'):
         img.bitmapAlphaData.seek(0)
@@ -227,6 +230,10 @@ def process_file(input, outdir):
     with open(input, 'rb') as f:
         m = swf.movie.SWF(f)
     parse_time = time() - start
+    
+    if WRITE_LOG:
+        with open(path.join(outdir, 'log.txt'), 'w') as sf:
+            debug(sf, m)
   
     # export sounds
     sounds = {}
