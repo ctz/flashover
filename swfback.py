@@ -227,9 +227,6 @@ def process_file(input, outdir):
     with open(input, 'rb') as f:
         m = swf.movie.SWF(f)
     parse_time = time() - start
-        
-    with open(path.join(outdir, 'log.txt'), 'w') as sf:
-        debug(sf, m)
   
     # export sounds
     sounds = {}
