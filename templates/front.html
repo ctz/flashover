@@ -59,6 +59,16 @@ $var title: online flash decompiler
     <tt id="upload-error-detail">That doesn't look like a flash file.</tt>
   </div>
 </div>
+ 
+<div class="hideable" id="upload-progress" style="display: none">
+  <div class="alert alert-success pull-center">
+    <h2 class="alert-heading">Upload in progress</h2>
+    <div class="progress progress-striped active">
+      <div class="bar" id="upload-progress-bar" style="width: 0%"></div>
+    </div>
+    <div id="upload-progress-detail">0%</div>
+  </div>
+</div>
 
 <div class="row hideable" id="bookmarklet-block" style="display: none">
   <div class="well span8 pull-right">
@@ -109,6 +119,12 @@ $$('#file-upload-json').fileupload({
       return;
     }
     document.location = '/await/' + result.job;
+  },
+  progress: function(e, data) {
+    var pc = parseInt(data.loaded / data.total * 100, 10);
+    $$('#upload-progress-detail').text(pc + '%');
+    $$('#upload-progress-bar').css('width', pc + '%');
+    $$('#upload-progress').show();
   },
 });
 </script>
