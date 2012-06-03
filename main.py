@@ -11,6 +11,12 @@ import svgthumb
 import Image
 from StringIO import StringIO
 
+try:
+    import debugmode
+    web.config.debug = True
+except:
+    web.config.debug = False
+
 job_re = '([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})'
 id_re = '(\d+)'
 sz_re = '(\d+)'
@@ -71,7 +77,6 @@ app = web.application(urls, globals())
 render = web.template.render(config.templates, base = 'base', globals = formatting.exports)
 part_render = web.template.render(config.templates, globals = formatting.exports)
 json = json.dumps
-web.config.debug = True
 
 class base_page(object):
     """
