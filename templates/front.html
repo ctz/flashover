@@ -24,10 +24,13 @@ $var title: online flash decompiler
 <div class="row hideable" id="upload-block" style="display: none">
   <div class="well span8 pull-right">
     <h2>Upload</h2>
-    <p>
+    <p id="drag-and-drop-supported">
       Just drag and drop to this page.
-      <form id="file-upload-json" method="POST" action="/file-upload-json" enctype="multipart/form-data" style="display: none">
+    </p>
+    <p>
+      <form id="file-upload-json" method="POST" action="/file-upload-json" enctype="multipart/form-data">
         <input type="file" name="file" />
+        <input type="submit" class="pull-right btn btn-flashover" value="Go &rarr;" />
       </form>
     </p>
         
@@ -96,30 +99,36 @@ updateHash();
 
 $$(window).bind('hashchange', updateHash);
 
-$$('#file-upload-json').fileupload({
-  url: '/file-upload-json',
-  paramName: 'file',
-  singleFileUploads: true,
-  fail: function(e, data) {
-    $$('#upload-error-detail').text('Server rejected upload: ' + data.errorThrown);
-    $$('#upload-error').show();
-  },
-  done: function(e, data) {
-    result = JSON.parse(data.result);
-    if (result.error)
-    {
-      $$('#upload-error-detail').text(result.error);
+if ($$.browser.msie || $$.browser.opera)
+{
+  $$('#drag-and-drop-supported').hide();
+} else {
+  $$('#drag-and-drop-supported').show();
+  $$('#file-upload-json').fileupload({
+    url: '/file-upload-json',
+    paramName: 'file',
+    singleFileUploads: true,
+    fail: function(e, data) {
+      $$('#upload-error-detail').text('Server rejected upload: ' + data.errorThrown);
       $$('#upload-error').show();
-      return;
-    }
-    document.location = '/await/' + result.job;
-  },
-  progress: function(e, data) {
-    var pc = parseInt(data.loaded / data.total * 100, 10);
-    $$('#upload-progress-detail').text(pc + '%');
-    $$('#upload-progress-bar').css('width', pc + '%');
-    $$('#upload-progress').show();
-  },
-});
+    },
+    done: function(e, data) {
+      result = JSON.parse(data.result);
+      if (result.error)
+      {
+        $$('#upload-error-detail').text(result.error);
+        $$('#upload-error').show();
+        return;
+      }
+      document.location = '/await/' + result.job;
+    },
+    progress: function(e, data) {
+      var pc = parseInt(data.loaded / data.total * 100, 10);
+      $$('#upload-progress-detail').text(pc + '%');
+      $$('#upload-progress-bar').css('width', pc + '%');
+      $$('#upload-progress').show();
+    },
+  });
+}
 
 </script>
