@@ -213,7 +213,7 @@ class file_upload_html(file_upload_base, base_html):
     def process(self):
         worked, res = file_upload_base.process(self)
         if worked:
-            return render.await(res)
+            raise web.seeother('/await/' + str(res))
         else:
             raise ValueError, res
 
