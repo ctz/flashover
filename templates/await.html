@@ -16,7 +16,7 @@ processSuccess = function(data, textStatus, jqxhr) {
     } else {
         $$('#info').text('you are ' + data.position + ' in a queue of ' + data.queue);
     }
-    setTimeout(fetchStatus, 5000);
+    setTimeout(fetchStatus, 2500);
 };
 
 processError = function(jqxhr, textStatus, errorThrown) {
@@ -26,6 +26,7 @@ processError = function(jqxhr, textStatus, errorThrown) {
 fetchStatus = function() {
     jQuery.ajax('/status/$job', {
         dataType: 'json',
+        cache: false,
         success: processSuccess,
         error: processError,
     });
