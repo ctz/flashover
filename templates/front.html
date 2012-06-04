@@ -28,7 +28,10 @@ $var title: online flash decompiler
       Just drag and drop to this page.
     </p>
     <p>
-      <form id="file-upload-json" method="POST" action="/file-upload-json" enctype="multipart/form-data">
+      <form id="file-upload-json" method="POST" style="display: none" action="/file-upload-json" enctype="multipart/form-data">
+        <input type="file" name="file" />
+      </form>
+      <form id="file-upload" method="POST" action="/file-upload" enctype="multipart/form-data">
         <input type="file" name="file" />
         <input type="submit" class="pull-right btn btn-flashover" value="Go &rarr;" />
       </form>
